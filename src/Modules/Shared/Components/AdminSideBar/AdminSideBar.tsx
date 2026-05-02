@@ -14,6 +14,7 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PersonIcon from "@mui/icons-material/Person";
 import CategoryIcon from "@mui/icons-material/Category";
 import LogoutIcon from "@mui/icons-material/Logout";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -28,6 +29,7 @@ const navItems = [
   { title: "Admins",     path: "/admin/admins",     icon: <AdminPanelSettingsIcon /> },
   { title: "Books",      path: "/admin/books",      icon: <MenuBookIcon /> },
   { title: "Categories", path: "/admin/categories", icon: <CategoryIcon /> },
+  { title: "Orders",     path: "/admin/orders",     icon: <ShoppingCartIcon /> },
   { title: "Profile",    path: "/admin/profile",    icon: <PersonIcon /> },
 ];
 
@@ -39,6 +41,7 @@ export default function AdminSideBar() {
   // Automatically collapse sidebar on small screens
   useEffect(() => {
     if (isSmallScreen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCollapsed(true);
     } else {
       setCollapsed(false);

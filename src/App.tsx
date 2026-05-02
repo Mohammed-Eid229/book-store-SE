@@ -26,6 +26,7 @@ import Admins from './Modules/Admin/AdminModule/Components/Admins/Admins'
 import AdminBooks from './Modules/Admin/AdminBooksModule/Components/AdminBooks/AdminBooks'
 import AdminBookDetails from './Modules/Admin/AdminBooksModule/Components/AdminBookDetails/AdminBookDetails'
 import AdminCategories from './Modules/Admin/CategoriesModule/Components/Categories/Categories'
+import AdminOrders from './Modules/Admin/AdminOrdersModule/Components/AdminOrders/AdminOrders'
 import { CategoriesProvider } from './Contexts/CategoriesContext'
 // import ProtectedRoutes from './ProtectedRoutes/ProtectedRoutes'
 
@@ -90,6 +91,7 @@ function App() {
           ]
         },
         { path: 'categories', element: <AdminCategories /> },
+        { path: 'orders', element: <AdminOrders /> },
         { path: 'profile', element: <Profile /> },
       ]
     }
