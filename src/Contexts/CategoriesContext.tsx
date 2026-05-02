@@ -17,12 +17,12 @@ interface CategoriesContextType {
 }
 
 const initialCategories: Category[] = [
-  { id: 1, name: "Drama", icon: "🎭", booksCount: 9, description: "Drama books" },
-  { id: 2, name: "Fantasy", icon: "🧙", booksCount: 4, description: "Fantasy books" },
-  { id: 3, name: "Children", icon: "🧸", booksCount: 2, description: "Children books" },
-  { id: 4, name: "Science", icon: "🔬", booksCount: 0, description: "Science books" },
-  { id: 5, name: "History", icon: "📜", booksCount: 0, description: "History books" },
-  { id: 6, name: "Romance", icon: "💕", booksCount: 0, description: "Romance books" },
+  { id: 1, name: "Drama", booksCount: 9, description: "Drama books" },
+  { id: 2, name: "Fantasy", booksCount: 4, description: "Fantasy books" },
+  { id: 3, name: "Children", booksCount: 2, description: "Children books" },
+  { id: 4, name: "Science", booksCount: 0, description: "Science books" },
+  { id: 5, name: "History", booksCount: 0, description: "History books" },
+  { id: 6, name: "Romance", booksCount: 0, description: "Romance books" },
 ];
 
 const CategoriesContext = createContext<CategoriesContextType | undefined>(undefined);

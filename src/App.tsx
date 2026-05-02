@@ -47,7 +47,7 @@ function App() {
     },
     {
       path: 'dashboard',
-      // element: <ProtectedRoutes><MasterLayout/></ProtectedRoutes>,
+      //element: <ProtectedRoutes><MasterLayout/></ProtectedRoutes>,
       element: <MasterLayout/>,
       errorElement: <NotFound/>,
       children: [

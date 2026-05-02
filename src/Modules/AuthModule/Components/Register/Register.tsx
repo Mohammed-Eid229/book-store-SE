@@ -122,7 +122,6 @@ export default function Register() {
                 id: 'role',
               }}
             >
-              <option value="Admin">Admin</option>
               <option value="Customer">Customer</option>
             </NativeSelect>
           </FormControl>
