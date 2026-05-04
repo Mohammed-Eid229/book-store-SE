@@ -39,20 +39,20 @@ export default function Book({ book, mode = "featured" }: BookProps) {
           py={2}
         >
           <Paper
-  elevation={6}
-  sx={{
-    width: 400,
-    height: 600,
-    overflow: "hidden",
-    borderRadius: 2,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    p: 2,
-    position: "relative",
-    opacity: isOutOfStock ? 0.6 : 1,
-  }}
->
+              elevation={6}
+              sx={{
+                width: 400,
+                height: 600,
+                overflow: "hidden",
+                borderRadius: 2,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                p: 2,
+                position: "relative",
+                opacity: isOutOfStock ? 0.6 : 1,
+              }}
+            >
             <Box
               component="img"
               src={book.img}
@@ -133,6 +133,7 @@ export default function Book({ book, mode = "featured" }: BookProps) {
               <Button
                 variant="outlined"
                 sx={{
+                  width: "100%",
                   color: "#393280",
                   borderColor: "#393280",
                   px: 3,
