@@ -1,6 +1,9 @@
 import { Box, Button, Grid, Paper, Typography } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 interface BookProps {
   book: {
@@ -19,6 +22,11 @@ interface BookProps {
 export default function Book({ book, mode = "featured" }: BookProps) {
   const navigate = useNavigate();
   const isOutOfStock = book.status.toLowerCase() === "out of stock";
+  const [isFav , setIsFav] = useState(false);
+  
+    const toggleFav = ()=>{
+      setIsFav(!isFav);
+    }
   return (
     <>
       <Grid container spacing={6} alignItems="center">
@@ -57,24 +65,24 @@ export default function Book({ book, mode = "featured" }: BookProps) {
               textAlign="center"
             />
             {isOutOfStock && (
-  <Box
-    sx={{
-      position: "absolute",
-      top: 16,
-      left: 16,
-      backgroundColor: "#ED553B",
-      color: "#fff",
-      px: 2,
-      py: 0.5,
-      fontSize: "12px",
-      fontWeight: "bold",
-      borderRadius: "4px",
-      zIndex: 2,
-    }}
-  >
-    Out of Stock
-  </Box>
-)}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 16,
+                  left: 16,
+                  backgroundColor: "#ED553B",
+                  color: "#fff",
+                  px: 2,
+                  py: 0.5,
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  borderRadius: "4px",
+                  zIndex: 2,
+                }}
+              >
+                Out of Stock
+              </Box>
+            )}
           </Paper>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -138,26 +146,45 @@ export default function Book({ book, mode = "featured" }: BookProps) {
             )}
 
             {mode === "details" && (
-  <Button
-    variant="outlined"
-    disabled={isOutOfStock}
-    sx={{
-      backgroundColor: isOutOfStock ? "#ccc" : "#ED553B",
-      color: "#FFF",
-      width: "100%",
-      py: 1.5,
-      border: 0,
-      borderRadius: 0,
-      textTransform: "uppercase",
-      fontWeight: "medium",
-      "&:hover": {
-        backgroundColor: isOutOfStock ? "#ccc" : "#d94a2f",
-      },
-    }}
-  >
-    {isOutOfStock ? "Unavailable" : "Add To Cart"}
-  </Button>
-)}
+              <Button
+                variant="outlined"
+                disabled={isOutOfStock}
+                sx={{
+                  backgroundColor: isOutOfStock ? "#ccc" : "#ED553B",
+                  color: "#FFF",
+                  width: "100%",
+                  py: 1.5,
+                  border: 0,
+                  borderRadius: 0,
+                  textTransform: "uppercase",
+                  fontWeight: "medium",
+                  "&:hover": {
+                    backgroundColor: isOutOfStock ? "#ccc" : "#d94a2f",
+                  },
+                }}
+              >
+                {isOutOfStock ? "Unavailable" : "Add To Cart"}
+              </Button>
+            )}
+
+            <Button
+                variant="outlined"
+                onClick={toggleFav}
+                sx={{
+                  width: "100%",
+                  py: 1.5,
+                  borderColor: '#f52366',
+                  borderRadius: 0,
+                  textTransform: "uppercase",
+                  fontWeight: "medium",
+                  backgroundColor : isFav ? '#f52366' : '',
+                  color : isFav ? '#FFF' : '#f52366', 
+                  my:2
+                }}
+                startIcon={isFav ? <FavoriteIcon/> : <FavoriteBorderIcon/>}
+              >
+                {isFav ? "Remove from Wishlist": "Add To Wishlist"}
+              </Button>
           </Box>
         </Grid>
       </Grid>
