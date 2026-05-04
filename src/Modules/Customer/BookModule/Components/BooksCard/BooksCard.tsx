@@ -1,5 +1,8 @@
-import { Box, Typography, Button, Stack, Paper } from "@mui/material";
+import { Box, Typography, Button, Stack, Paper, Tooltip, IconButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import { useState } from "react";
 
 interface Book {
   id: number;
@@ -19,6 +22,11 @@ interface BooksCardProps {
 export default function BookCard({ book, view }: BooksCardProps) {
   const navigate = useNavigate();
   const isOutOfStock = book.status === "out of stock";
+  const [isFav , setIsFav] = useState(false);
+
+  const toggleFav = ()=>{
+    setIsFav(!isFav);
+  }
   return (
     <>
       <Box
@@ -86,10 +94,10 @@ export default function BookCard({ book, view }: BooksCardProps) {
                 Out of Stock
               </Box>
             )}
-            <Box className="addToCartBtn">
+            <Box className="actionsBtn" textAlign='center'>
               <Button
                 variant="contained"
-                disabled={isOutOfStock} // 👈 disable
+                disabled={isOutOfStock}
                 sx={{
                   backgroundColor: isOutOfStock ? "#ccc" : "#ED553B",
                   color: "#FFF",
@@ -102,6 +110,21 @@ export default function BookCard({ book, view }: BooksCardProps) {
               >
                 {isOutOfStock ? "Unavailable" : "Add to cart"}
               </Button>
+              <Tooltip title="Add to Wishlist">
+              <IconButton
+                size="small"
+                sx={{
+                  bgcolor: "#fff",
+                  boxShadow: 2,
+                  color: "#f52366",
+                  "&:hover": { bgcolor: "#FFF", color: "#f52366" },
+                  my:3
+                }}
+                onClick={toggleFav}
+              >
+                {isFav ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
             </Box>
           </Paper>
         </Box>

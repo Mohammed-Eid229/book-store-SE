@@ -87,7 +87,7 @@ export default function AdminBooksCard({ book, view, onDelete, onEdit }: AdminBo
 
           {/* Admin Action Buttons - shown on hover (same spot as Add to Cart was) */}
           <Box
-            className="addToCartBtn"
+            className="actionsBtn"
             sx={{
               position: "absolute",
               bottom: "10%",

@@ -24,6 +24,7 @@ interface BooksSettings {
   view: "grid" | "list";
   sortBy: SortOption;
   itemsPerPage: number;
+  page: number;
 }
 interface UseBooksReturn {
   view: "grid" | "list";
@@ -44,36 +45,40 @@ interface UseBooksReturn {
   startIndex: number;
 }
 
-  const getInitialSettings = (): BooksSettings => {
-  const saved = localStorage.getItem("booksSettings");
+  const getInitialSettings = (storageKey: string): BooksSettings => {
+    const saved = localStorage.getItem(storageKey);
 
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch {
-      // fallback if corrupted
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // fallback
+      }
     }
-  }
 
-  return {
-    view: "grid",
-    sortBy: "newest",
-    itemsPerPage: 12,
+    return {
+      view: "grid",
+      sortBy: "newest",
+      itemsPerPage: 12,
+      page: 1,
+    };
   };
-};
 
-export function useBooks(allBooks: Book[]): UseBooksReturn {
+export function useBooks(allBooks: Book[], storageKey: string): UseBooksReturn {
 
-  const initial = getInitialSettings();
+  const initial = getInitialSettings(storageKey);
+
   const [view, setView] = useState<"grid" | "list">(initial.view);
   const [sortBy, setSortBy] = useState<SortOption>(initial.sortBy);
   const [itemsPerPage, setItemsPerPage] = useState(initial.itemsPerPage);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initial.page);
 
   useEffect(() => {
-    const settings: BooksSettings = {view,sortBy,itemsPerPage,};
-    localStorage.setItem("booksSettings", JSON.stringify(settings));
-  }, [view, sortBy, itemsPerPage]);
+    const settings: BooksSettings = { view, sortBy, itemsPerPage, page };
+    localStorage.setItem(storageKey, JSON.stringify(settings));
+  }, [view, sortBy, itemsPerPage, page, storageKey]);
+
+  
   //  Sorting
   const sortedBooks = useSort(allBooks, sortBy);
 

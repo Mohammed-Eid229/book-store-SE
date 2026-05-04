@@ -250,7 +250,7 @@ export default function AdminBooks() {
   };
 
   const { filters, setPrice, toggleFilter, filteredBooks, applyFilters } = useFilters(allBooksData);
-  const books = useBooks(filteredBooks as Book[]);
+  const books = useBooks(filteredBooks as Book[], "booksSettings");
 
   return (
     <>

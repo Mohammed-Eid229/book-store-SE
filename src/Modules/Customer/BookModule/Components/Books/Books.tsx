@@ -47,7 +47,7 @@ export default function Books() {
 
   const { filters, setPrice, toggleFilter, filteredBooks,applyFilters } = useFilters(allBooks);
 
-  const books = useBooks(filteredBooks);
+  const books = useBooks(filteredBooks , "booksSettings");
 
   return (
     <>
