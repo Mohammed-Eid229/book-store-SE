@@ -7,7 +7,8 @@ interface Book {
   category: string;
   author: string;
   price: number;
-  img: string;
+  image: string;
+  description: string;
   status: string;
 }
 

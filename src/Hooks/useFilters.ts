@@ -1,49 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from "react";
 
-interface Book {
-  id: number;
-  title: string;
-  category: string;
-  author: string;
-  price: number;
-  img: string;
-  status: string;
-  brand?: string;
-}
+export function useFilters(allBooks: any[]) {
 
-interface Filters {
-  minPrice: string;
-  maxPrice: string;
-  types: string[];
-  statuses: string[];
-  brands: string[];
-}
-
-type FilterType = "types" | "statuses" | "brands";
-
-export function useFilters(allBooks: Book[]) {
-  // 🔹 initial state (clean + reusable)
-  const initialFilters: Filters = {
+  const initialFilters = {
     minPrice: "",
     maxPrice: "",
-    types: [],
-    statuses:[],
-    brands: [],
+    types: [] as string[],
+    statuses: [] as string[],
   };
 
-  const [filters, setFilters] = useState<Filters>(initialFilters);
-  const [appliedFilters, setAppliedFilters] = useState<Filters>(initialFilters);
+  const [filters, setFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
 
-  // 🔹 price change
-  const setPrice = (field: "minPrice" | "maxPrice", value: string) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
-  };
-
-  // 🔹 checkbox toggle
-  const toggleFilter = (filterType: FilterType, value: string) => {
+  const toggleFilter = (filterType: "types" | "statuses", value: string) => {
     setFilters((prev) => {
-      const exists = prev[filterType].includes(value);
+      if (filterType === "types") {
+        const isAlreadySelected = prev.types.includes(value);
+        return {
+          ...prev,
+          types: isAlreadySelected ? [] : [value],
+        };
+      }
 
+      const exists = prev[filterType].includes(value);
       return {
         ...prev,
         [filterType]: exists
@@ -53,43 +33,30 @@ export function useFilters(allBooks: Book[]) {
     });
   };
 
-  // 🔹 apply filters (manual trigger)
   const applyFilters = () => {
     setAppliedFilters(filters);
   };
 
-  // 🔹 filtering logic
   const filteredBooks = useMemo(() => {
-    
-    const min = appliedFilters.minPrice? Number(appliedFilters.minPrice): 0;
-    const max = appliedFilters.maxPrice? Number(appliedFilters.maxPrice): Infinity;
+    const min = appliedFilters.minPrice ? Number(appliedFilters.minPrice) : 0;
+    const max = appliedFilters.maxPrice ? Number(appliedFilters.maxPrice) : Infinity;
 
     return allBooks.filter((book) => {
-      const matchPrice = book.price >= min && book.price <= max;
+      const bookPrice = Number(book.price) || 0;
+      const matchPrice = bookPrice >= min && bookPrice <= max;
 
-      const category = (book.category || "").toLowerCase();
-      const status = (book.status || "").toLowerCase();
-      const brand = (book.brand || "").toLowerCase();
-
-      const matchType =
-        appliedFilters.types.length === 0 ||
-        appliedFilters.types.includes(category);
-
+      const bookStatus = (book.status || "").toString().toLowerCase().trim();
       const matchStatus =
         appliedFilters.statuses.length === 0 ||
-        appliedFilters.statuses.includes(status);
+        appliedFilters.statuses.includes(bookStatus);
 
-      const matchBrand =
-        appliedFilters.brands.length === 0 ||
-        appliedFilters.brands.includes(brand);
-
-      return matchPrice && matchType && matchStatus && matchBrand;
+      return matchPrice && matchStatus; 
     });
   }, [allBooks, appliedFilters]);
 
   return {
     filters,
-    setPrice,
+    setPrice: (field: any, value: any) => setFilters(p => ({...p, [field]: value})),
     toggleFilter,
     applyFilters,
     filteredBooks,

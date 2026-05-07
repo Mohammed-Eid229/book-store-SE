@@ -1,4 +1,5 @@
-import { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useContext, useState } from 'react';
 import { 
   Stack, styled, type BadgeProps, Drawer, useMediaQuery, useTheme, 
   Badge,
@@ -20,6 +21,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import { toast } from 'react-toastify';
 import { AuthAPI } from '../../../../Api';
+import { AuthContext } from './../../../../Contexts/AuthContext';
 
 const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
   '& .MuiBadge-badge': {
@@ -33,6 +35,8 @@ const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
 export default function NavBar() {
 
   const navigate = useNavigate()
+
+  const {userData}:any = useContext(AuthContext);
 
   const [open, setOpen] = useState(false);
   const theme = useTheme();
@@ -67,7 +71,7 @@ const logout = async()=>{
     <>
       <Grid container sx={{ my: 2, px: 5 }} justifyContent='space-between' alignItems='center'>
         <Grid>
-          <Avatar sx={{ bgcolor: deepOrange[500] }}>M</Avatar>
+          <Avatar sx={{ bgcolor: deepOrange[500] }}>{userData?.firstName[0]}{userData?.lastName[0]} </Avatar>
         </Grid>
 
         {!isMobile && (
@@ -152,10 +156,10 @@ const logout = async()=>{
                 boxShadow: 2 
               }}
             >
-              M
+              {userData?.firstName[0]}{userData?.lastName[0]}
             </Avatar>
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
-              Mohamed
+              {userData?.firstName} {userData?.lastName}
             </Typography>
           </Stack>
           <Stack direction="column" divider={<Divider orientation="horizontal" flexItem />} spacing={3}>

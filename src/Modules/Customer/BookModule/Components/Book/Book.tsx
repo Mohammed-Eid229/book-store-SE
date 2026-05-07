@@ -1,25 +1,31 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box, Button, Grid, Paper, Typography } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { AuthContext } from "../../../../../Contexts/AuthContext";
 
 interface BookProps {
   book: {
     id: number;
     title: string;
     category: string;
+    description: string;
     author: string;
     price: number;
-    img: string;
+    image: string;
     status: string;
     quantity?: number;
   };
   mode?: "featured" | "details";
 }
 
+
+
 export default function Book({ book, mode = "featured" }: BookProps) {
+  const {userData}:any = useContext(AuthContext);
   const navigate = useNavigate();
   const isOutOfStock = book.status.toLowerCase() === "out of stock";
   const [isFav , setIsFav] = useState(false);
@@ -55,7 +61,7 @@ export default function Book({ book, mode = "featured" }: BookProps) {
             >
             <Box
               component="img"
-              src={book.img}
+              src={`/api/images/books/${book.image}`}
               alt={book.title}
               sx={{
                 width: "100%",
@@ -113,8 +119,7 @@ export default function Book({ book, mode = "featured" }: BookProps) {
             </Typography>
 
             <Typography variant="body2" color="#7A7A7A" my={2}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eu
-              feugiat amet, libero ipsum enim pharetra hac.
+              {book.description}
             </Typography>
 
             <Typography variant="h6" color="#ED553B" mt={3}>
@@ -122,9 +127,13 @@ export default function Book({ book, mode = "featured" }: BookProps) {
             </Typography>
 
             {mode === "details" && book.quantity !== undefined && (
-              <Typography variant="body2" color="#7A7A7A" mt={1}>
-                Available Quantity: {book.quantity}
-              </Typography>
+              <>
+                {userData?.role === "admin" && (
+                  <Typography variant="body2" color="#7A7A7A" mt={1} sx={{ fontWeight: 'bold' }}>
+                    Stock Quantity: {book.quantity} 
+                  </Typography>
+                )}
+              </>
             )}
           </Box>
 

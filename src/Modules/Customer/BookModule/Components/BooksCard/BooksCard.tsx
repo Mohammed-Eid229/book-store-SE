@@ -12,6 +12,7 @@ interface Book {
   price: number;
   image: string;
   status: string;
+  description: string;
 }
 
 interface BooksCardProps {
@@ -160,8 +161,7 @@ export default function BookCard({ book, view }: BooksCardProps) {
             {/* In List View, you might want to show a description */}
             {view === "list" && (
               <Typography variant="body2" color="text.secondary" sx={{ my: 1 }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                {book.description}
               </Typography>
             )}
 

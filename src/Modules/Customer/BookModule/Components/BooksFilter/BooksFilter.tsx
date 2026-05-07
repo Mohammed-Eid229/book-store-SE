@@ -18,82 +18,56 @@ interface Filters {
   maxPrice: string;
   types: string[];
   statuses: string[];
-  brands: string[];
 }
 
-type FilterKey = "types" | "brands" | "statuses";
+type FilterKey = "types" | "statuses";
 
 interface BooksFilterProps {
   filters: Filters;
   setPrice: (field: "minPrice" | "maxPrice", value: string) => void;
   toggleFilter: (category: FilterKey, value: string) => void;
   applyFilters: () => void;
+  categories: string[] | null;
 }
-
-interface FilterOption {
-  label: string;
-  value: string;
-}
-
-interface FilterSection {
-  key: FilterKey;
-  title: string;
-  options: FilterOption[];
-}
-
-const filterOptions: FilterSection[] = [
-  {
-    key: "types",
-    title: "Product Type",
-    options: [
-      { label: "Fantasy", value: "fantasy" },
-      { label: "Drama", value: "drama" },
-      { label: "Children", value: "children" },
-    ],
-  },
-  {
-    key: "statuses",
-    title: "Availability",
-    options: [
-      { label: "In Stock", value: "in stock" },
-      { label: "Out of Stock", value: "out of stock" },
-    ],
-  },
-  {
-    key: "brands",
-    title: "Brand",
-    options: [
-      { label: "Brand A", value: "brand a" },
-      { label: "Brand B", value: "brand b" },
-    ],
-  },
-];
 
 export default function BooksFilter({
   filters,
   setPrice,
   toggleFilter,
   applyFilters,
+  categories,
 }: BooksFilterProps) {
+  
+  const sections = [
+    {
+      key: "types" as const,
+      title: "Product Type",
+      options: (categories ?? [])?.map((cat) => ({
+        label: cat, 
+        value: cat
+      })),
+    },
+    {
+      key: "statuses" as const,
+      title: "Availability",
+      options: [
+        { label: "In Stock", value: "in stock" },
+        { label: "Out of Stock", value: "out of stock" },
+      ],
+    },
+  ];
+
   return (
     <Box>
       <Stack spacing={3}>
-        {/* PRICE */}
         <Box>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={1}
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="h6" color="#393280" fontWeight={700}>
               Price
             </Typography>
-            <Box sx={{width: "20px",height: "2px",backgroundColor: "#393280",}}/>
+            <Box sx={{ width: "20px", height: "2px", backgroundColor: "#393280" }} />
           </Stack>
-
           <Divider sx={{ mb: 2 }} />
-
           <Stack direction="row" alignItems="center" spacing={2}>
             <TextField
               size="small"
@@ -102,9 +76,7 @@ export default function BooksFilter({
               value={filters.minPrice}
               onChange={(e) => setPrice("minPrice", e.target.value)}
             />
-
             <Typography color="text.secondary">to</Typography>
-
             <TextField
               size="small"
               placeholder="Max"
@@ -113,55 +85,48 @@ export default function BooksFilter({
               onChange={(e) => setPrice("maxPrice", e.target.value)}
             />
           </Stack>
-
           <Button
             variant="contained"
             fullWidth
-            sx={{ mt: 2, bgcolor: "#393280", borderRadius: 0 }}
+            sx={{ mt: 2, bgcolor: "#393280", borderRadius: 0, textTransform: 'none' }}
             onClick={applyFilters}
           >
             Filter
           </Button>
         </Box>
-
-        {/* FILTER SECTIONS */}
         <Box>
-          {filterOptions.map((section) => (
-            <Accordion key={section.key}>
-              <AccordionSummary
-                expandIcon={<AddIcon sx={{ color: "#393280" }} />}
-              >
-                <Typography
-                  variant="body1"
-                  fontWeight={700}
-                  color="#393280"
-                >
+          {sections.map((section) => (
+            <Accordion key={section.key} disableGutters sx={{ 
+              mb: 2,
+              border: '1px solid #E0E0E0', 
+              borderRadius: '8px !important',
+              boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)',
+              '&:before': { display: 'none' },
+              '&.Mui-expanded': {
+                boxShadow: '0px 6px 15px rgba(57, 50, 128, 0.1)'
+              }
+            }}>
+              <AccordionSummary expandIcon={<AddIcon sx={{ color: "#393280" }} />}>
+                <Typography variant="body1" fontWeight={700} color="#393280">
                   {section.title}
                 </Typography>
               </AccordionSummary>
-
               <AccordionDetails>
-                {section.options.map((option) => (
-                  <FormControlLabel
-                    key={option.value}
-                    control={
-                      <Checkbox
-                        checked={filters[section.key].includes(
-                          option.value
-                        )}
-                        sx={{
-                          '&.Mui-checked': {
-                            color: '#ED553B',
-                          },
-                        }}
-                        onChange={() =>
-                          toggleFilter(section.key, option.value)
-                        }
-                      />
-                    }
-                    label={option.label}
-                  />
-                ))}
+                <Stack>
+                  {section.options.map((option) => (
+                    <FormControlLabel
+                      key={option.value}
+                      control={
+                        <Checkbox
+                          checked={filters[section.key].includes(option.value)}
+                          onChange={() => toggleFilter(section.key, option.value)}
+                          sx={{ '&.Mui-checked': { color: '#ED553B' } }}
+                        />
+                      }
+                      label={option.label}
+                    />
+                  ))}
+                </Stack>
               </AccordionDetails>
             </Accordion>
           ))}

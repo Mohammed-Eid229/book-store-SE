@@ -16,40 +16,15 @@ interface Book {
   price: number;
   image: string;
   status: string;
+  description: string
 }
-
-// import book1 from '../../../../../assets/Images/book1.jpg';
-// import book2 from '../../../../../assets/Images/book2.webp';
-// import book3 from '../../../../../assets/Images/book3.webp';
-// import book4 from '../../../../../assets/Images/book4.webp';
-// import book5 from '../../../../../assets/Images/book5.png';
-// import book6 from '../../../../../assets/Images/book6.png';
-// import book7 from '../../../../../assets/Images/book7.png';
-// import book8 from '../../../../../assets/Images/book8.jpg';
-// import book9 from '../../../../../assets/Images/book9.webp';
-// import book10 from '../../../../../assets/Images/book10.jpg';
-
-
-// const books = [
-//     {id:1 , title:'the design of books' , category:'Drama', author:'debbie berne' , price: 38.00, img: book1 , status:'in stock'},
-//     {id:2 , title:'the lost' , category:'Fantasy', author:'matt zhang' , price: 46.00, img: book2 , status:'in stock'},
-//     {id:3 , title:'The moon and the stars' , category:'Drama', author:'Jenna Warren' , price: 62.00, img: book3 , status:'in stock'},
-//     {id:4 , title:'the green solider' , category:'Drama', author:'J. Edward Gore' , price: 50.00, img: book4 , status:'in stock'},
-//     {id:5 , title:'the hypocrite world' , category:'Drama', author:'sophia hill' , price: 35.00, img: book5 , status:'out of stock'},
-//     {id:6 , title:'my book cover' , category:'Drama', author:'author' , price: 41.00, img: book6 , status:'in stock'},
-//     {id:7 , title:'your simple book cover' , category:'Fantasy', author:'ken adams' , price: 55.00, img: book7 , status:'out of stock'},
-//     {id:8 , title:'book name' , author:'author name' , category:'Children', price: 55.00, img: book8 , status:'in stock'},
-//     {id:9 , title:'harry potter and the champer of secrets' ,category:'Fantasy', author:'J.K.Rowling' , price: 70.00, img: book9 , status:'in stock'},
-//     {id:10 , title:'all the light we cannot see' , category:'Drama', author:'Antony Doerr' , price: 55.00, img: book10 , status:'in stock'},
-    
-// ]
-
 
 export default function NewRelease() {
     const navigate = useNavigate();
     const { data: books, loading } = useFetch<Book[]>(
           () => BooksAPI.GetBooks()
-        );
+    );
+
   return (
     <>
       <Box sx={{ backgroundColor: "#FCECEC", overflowX: "hidden" }}>
@@ -83,7 +58,7 @@ export default function NewRelease() {
                 modules={[Pagination]}
                 className="mySwiper"
                 >
-                {books?.map((book) => (
+                {books?.slice(0, 10).map((book) => (
                     <SwiperSlide key={book.id}>
                         <BookCard book={book} view={'grid'} />
                     </SwiperSlide>
