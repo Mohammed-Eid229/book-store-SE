@@ -10,10 +10,9 @@ import {
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { toast } from "react-toastify";
-import { AUTH_URLS } from "../../../../Constants/END-POINTS";
 import { emailValidation, passwordValidation } from "../../../../Constants/VALIDATIONS";
+import { AuthAPI } from "../../../../Api";
 import { useContext } from "react";
 import { AuthContext } from "../../../../Contexts/AuthContext";
 
@@ -22,8 +21,9 @@ interface FormValues {
   password: string;
 }
 export default function Login() {
+  
   const navigate = useNavigate()
-  const {saveUserData}:any = useContext(AuthContext)
+  const {userData , saveUserData}:any = useContext(AuthContext)
   const {
     register,
     handleSubmit,
@@ -32,13 +32,18 @@ export default function Login() {
 
   const onSubmit = async(data: FormValues) => {
     try {
-      const response = await axios.post(AUTH_URLS.login , data)
-      localStorage.setItem('userToken' , response?.data?.data?.accessToken);
-      saveUserData();
-      toast.success(response?.data?.message);
-      navigate('/dashboard')
+      const response = await AuthAPI.Login(data)
+       localStorage.setItem('userToken' , response?.data?.token);
+       saveUserData();
+       if(userData?.role == 'admin'){
+        navigate('/admin');
+       }else{
+        navigate('/dashboard')
+       }
+       toast.success("Logged in!");
+       
     } catch (error:any) {
-      toast.error(error?.response?.data?.message)
+      toast.error(error.response?.data?.error);
     }
   };
 

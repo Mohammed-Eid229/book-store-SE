@@ -28,7 +28,7 @@ import AdminBookDetails from './Modules/Admin/AdminBooksModule/Components/AdminB
 import AdminCategories from './Modules/Admin/CategoriesModule/Components/Categories/Categories'
 import AdminOrders from './Modules/Admin/AdminOrdersModule/Components/AdminOrders/AdminOrders'
 import { CategoriesProvider } from './Contexts/CategoriesContext'
-// import ProtectedRoutes from './ProtectedRoutes/ProtectedRoutes'
+import ProtectedRoutes from './ProtectedRoutes/ProtectedRoutes'
 
 function App() {
 
@@ -48,8 +48,7 @@ function App() {
     },
     {
       path: 'dashboard',
-      //element: <ProtectedRoutes><MasterLayout/></ProtectedRoutes>,
-      element: <MasterLayout/>,
+      element: <ProtectedRoutes><MasterLayout/></ProtectedRoutes>,
       errorElement: <NotFound/>,
       children: [
         {index: true , element: <Home/>},
@@ -76,7 +75,7 @@ function App() {
     // ── Admin Routes ──────────────────────────────────────────────────────
     {
       path: 'admin',
-      element: <AdminLayout />,
+      element: <ProtectedRoutes><AdminLayout /></ProtectedRoutes>,
       errorElement: <NotFound />,
       children: [
         { index: true, element: <AdminHome /> },
