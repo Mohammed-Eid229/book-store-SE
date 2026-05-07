@@ -1,24 +1,24 @@
-import { Box, Button, Container, IconButton, Stack, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Container, IconButton, Stack, Typography } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import '../../../../../../node_modules/swiper/swiper-bundle.css';
+import { CategoriesAPI } from "../../../../../Api";
+import { useFetch } from "../../../../../Hooks/useFetch";
 
-import categimg1 from '../../../../../assets/Images/category1.jpg'
-import categimg2 from '../../../../../assets/Images/category2.jpg'
-import categimg3 from '../../../../../assets/Images/category3.jpg'
-
-const categData = [
-  {id:1, title:'Higher Education', image:categimg1},
-  {id:2, title:'Management Books', image:categimg2},
-  {id:3, title:'Engineering Books', image:categimg3},
-  {id:4, title:'Science Fiction', image:categimg1},
-  {id:5, title:'Computer Science', image:categimg2},
-  {id:6, title:'History Books', image:categimg3}
-]
+interface Category {
+  id: number;
+  image: string;
+  name: string;
+}
 
 export default function HomeCateg() {
+
+    const { data: categories, loading } = useFetch<Category[]>(
+      () => CategoriesAPI.GetCategories()
+    );
+    
   return (
     <>
       <Box sx={{ py: 2 }}>
@@ -61,36 +61,49 @@ export default function HomeCateg() {
           </Stack>
         </Stack>
         <Box>
-          <Swiper
-            slidesPerView={1}
-            spaceBetween={10}
-            observer={true} 
-            observeParents={true}
-            navigation={{
-              prevEl: '.prev-btn',
-              nextEl: '.next-btn',
-              disabledClass: 'swiper-button-disabled'
-            }}
-            breakpoints={{
-              600: { slidesPerView: 2, spaceBetween: 20 },
-              900: { slidesPerView: 3, spaceBetween: 30 },
-            }}
-            modules={[Navigation]}
-            className="mySwiper"
-          >
-            {categData.map((categ) => (
-              <SwiperSlide key={categ.id}>
-                <Stack direction='column' spacing={2} textAlign='center'>
-                  <img 
-                    src={categ.image} 
-                    alt={categ.title} 
-                    style={{ borderRadius: '10px', width: '100%', display: 'block' }} 
-                  />
-                  <Typography variant="h6" color="#393280">{categ.title}</Typography>
-                </Stack>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                <CircularProgress size="3rem" aria-label="Loading…" />
+              </Box>
+            ) : (
+              <Swiper
+                slidesPerView={1}
+                spaceBetween={10}
+                observer={true}
+                observeParents={true}
+                navigation={{
+                  prevEl: '.prev-btn',
+                  nextEl: '.next-btn',
+                  disabledClass: 'swiper-button-disabled'
+                }}
+                breakpoints={{
+                  600: { slidesPerView: 2, spaceBetween: 20 },
+                  900: { slidesPerView: 3, spaceBetween: 30 },
+                }}
+                modules={[Navigation]}
+                className="mySwiper"
+              >
+                {/* The ?. check fixes the 'possibly null' error */}
+                {categories?.map((categ) => (
+                  <SwiperSlide key={categ.id}>
+                    <Stack direction='column' spacing={2} textAlign='center'>
+                      <img 
+                        src={`/api/images/categories/${categ.image}`} 
+                        alt={categ.name} 
+                        style={{ 
+                          width: '100%', 
+                          aspectRatio: '12/7',
+                          objectFit: 'cover', 
+                          borderRadius: '10px', 
+                          display: 'block' 
+                        }} 
+                      />
+                      <Typography variant="h6" color="#393280">{categ.name}</Typography>
+                    </Stack>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            )}
         </Box>
         <Box textAlign='center' my={4}>
           <Button variant='outlined' 

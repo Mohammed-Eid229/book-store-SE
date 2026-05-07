@@ -10,7 +10,7 @@ interface Book {
   category: string;
   author: string;
   price: number;
-  img: string;
+  image: string;
   status: string;
 }
 
@@ -65,7 +65,7 @@ export default function BookCard({ book, view }: BooksCardProps) {
           >
             <Box
               component="img"
-              src={book.img}
+              src={`/api/images/books/${book.image}`}
               alt={book.title}
               sx={{
                 width: "100%",
