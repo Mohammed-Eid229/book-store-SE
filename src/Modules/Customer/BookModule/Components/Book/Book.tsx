@@ -61,7 +61,7 @@ export default function Book({ book, mode = "featured" }: BookProps) {
             >
             <Box
               component="img"
-              src={book.image ? (book.image.startsWith("http") ? book.image : `https://upskilling-egypt.com:3007/${book.image}`) : ""}
+              src={`/api/images/books/${book.image}`}
               alt={book.title}
               sx={{
                 width: "100%",
