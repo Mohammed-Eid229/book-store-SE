@@ -17,6 +17,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { AuthAPI } from "../../../../Api";
 
 const SIDEBAR_BG   = "#393280";
 const ACTIVE_COLOR = "#ED553B";
@@ -51,13 +52,19 @@ export default function AdminSideBar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    navigate("/");
-    toast.success("Logged out successfully!");
-  };
-
   const isActive = (path: string) => location.pathname === path;
+
+  const logout = async()=>{
+    try {
+      const response = await AuthAPI.Logout();
+      localStorage.removeItem("userToken");
+      navigate('/');
+      toast.success(response?.data?.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Something went wrong!';
+      toast.error(errorMessage);
+    }
+  }
 
   return (
     <Box sx={{ height: "100vh", position: "sticky", top: 0, display: "flex", flexDirection: "column", flexShrink: 0 }}>
@@ -153,7 +160,7 @@ export default function AdminSideBar() {
             icon: { color: TEXT_COLOR },
           }}
         >
-          <MenuItem icon={<LogoutIcon />} onClick={handleLogout}>
+          <MenuItem icon={<LogoutIcon />} onClick={logout}>
             Logout
           </MenuItem>
         </Menu>

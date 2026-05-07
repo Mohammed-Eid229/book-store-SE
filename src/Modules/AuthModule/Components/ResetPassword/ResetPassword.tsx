@@ -10,15 +10,14 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { toast } from "react-toastify";
-import { AUTH_URLS } from "../../../../Constants/END-POINTS";
 import { emailValidation, passwordValidation } from "../../../../Constants/VALIDATIONS";
+import { AuthAPI } from "../../../../Api";
 
 interface FormValues {
   email: string;
   otp: string
-  password: string;
+  newPassword: string;
 }
 export default function ResetPassword() {
   const navigate = useNavigate()
@@ -30,12 +29,11 @@ export default function ResetPassword() {
 
   const onSubmit = async(data: FormValues) => {
     try {
-      const response = await axios.post(AUTH_URLS.resetpass , data)
-      toast.success(response?.data?.message);
+      const response = await AuthAPI.ResetPassword(data);
+      toast.success(response?.data);
       navigate('/login')
     } catch (error:any) {
-      const msg = error?.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || "Something went wrong");
+      toast.error(error.response?.data?.error);
     }
   };
 
@@ -82,12 +80,12 @@ export default function ResetPassword() {
           sx={{ mb: 1 }}
           id="password"
           type="password"
-          label="password"
+          label="newPassword"
           variant="outlined"
           fullWidth
-          error={!!errors?.password}
-          helperText={errors?.password?.message}
-          {...register("password", passwordValidation)}
+          error={!!errors?.newPassword}
+          helperText={errors?.newPassword?.message}
+          {...register("newPassword", passwordValidation)}
         />
         <Grid
           container

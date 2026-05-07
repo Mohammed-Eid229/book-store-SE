@@ -8,17 +8,19 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { toast } from "react-toastify";
-import { AUTH_URLS } from "../../../../Constants/END-POINTS";
 import { passwordValidation } from "../../../../Constants/VALIDATIONS";
+import { AuthAPI } from "../../../../Api";
+import { useContext } from "react";
+import { AuthContext } from "../../../../Contexts/AuthContext";
 
 interface FormValues {
-  password: string;
-  password_new: string;
+  oldPassword: string;
+  newPassword: string;
 }
 export default function ChangePassword() {
   const navigate = useNavigate()
+  const {userData}:any = useContext(AuthContext);
   const {
     register,
     handleSubmit,
@@ -27,18 +29,11 @@ export default function ChangePassword() {
 
   const onSubmit = async (data: FormValues) => {
   try {
-    const token = localStorage.getItem("userToken");
-    const response = await axios.post(AUTH_URLS.changepass , data ,{
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-    toast.success(response?.data?.message);
+    await AuthAPI.ChangePassword(userData.userId , data);
+    toast.success("Password Changed Successfully!");
     navigate("/dashboard");
-    
   } catch (error: any) {
-    toast.error(error?.response?.data?.message);
+    toast.error(error?.response?.data?.error);
   }
 };
 
@@ -64,9 +59,9 @@ export default function ChangePassword() {
           label="Old Password"
           variant="outlined"
           fullWidth
-          error={!!errors?.password}
-          helperText={errors?.password?.message}
-          {...register("password", passwordValidation)}
+          error={!!errors?.oldPassword}
+          helperText={errors?.oldPassword?.message}
+          {...register("oldPassword", passwordValidation)}
         />
 
         {/* new password */}
@@ -77,9 +72,9 @@ export default function ChangePassword() {
           label="New Password"
           variant="outlined"
           fullWidth
-          error={!!errors?.password_new}
-          helperText={errors?.password_new?.message}
-          {...register("password_new", passwordValidation)}
+          error={!!errors?.newPassword}
+          helperText={errors?.newPassword?.message}
+          {...register("newPassword", passwordValidation)}
         />
         <Stack>
           <Button

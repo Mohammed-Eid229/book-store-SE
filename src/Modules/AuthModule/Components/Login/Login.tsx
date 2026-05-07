@@ -23,7 +23,7 @@ interface FormValues {
 export default function Login() {
   
   const navigate = useNavigate()
-  const {userData , saveUserData}:any = useContext(AuthContext)
+  const {saveUserData}:any = useContext(AuthContext)
   const {
     register,
     handleSubmit,
@@ -32,20 +32,22 @@ export default function Login() {
 
   const onSubmit = async(data: FormValues) => {
     try {
-      const response = await AuthAPI.Login(data)
-       localStorage.setItem('userToken' , response?.data?.token);
-       saveUserData();
-       if(userData?.role == 'admin'){
+      const response = await AuthAPI.Login(data);
+      const token = response?.data?.token;
+      const userRole = response?.data?.role;
+
+      localStorage.setItem('userToken', token);
+      saveUserData(); 
+      if (userRole === 'admin') {
         navigate('/admin');
-       }else{
-        navigate('/dashboard')
-       }
-       toast.success("Logged in!");
-       
-    } catch (error:any) {
-      toast.error(error.response?.data?.error);
+      } else {
+        navigate('/dashboard');
+      }
+      toast.success("Logged in!");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Login Failed");
     }
-  };
+};
 
   return (
     <>

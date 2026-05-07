@@ -19,6 +19,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { NavLink, useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import { toast } from 'react-toastify';
+import { AuthAPI } from '../../../../Api';
 
 const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
   '& .MuiBadge-badge': {
@@ -50,12 +51,12 @@ export default function NavBar() {
   { title: "Contact Us", path: "/contact" }
 ];
 
-const logout = ()=>{
+const logout = async()=>{
   try {
-    localStorage.removeItem('userToken');
+    const response = await AuthAPI.Logout();
+    localStorage.removeItem("userToken");
     navigate('/');
-    toast.success('Logged out successfully!')
-    
+    toast.success(response?.data?.message);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Something went wrong!';
     toast.error(errorMessage);

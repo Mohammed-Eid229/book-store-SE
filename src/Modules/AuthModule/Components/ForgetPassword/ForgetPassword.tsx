@@ -8,10 +8,9 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { toast } from "react-toastify";
-import { AUTH_URLS } from "../../../../Constants/END-POINTS";
 import { emailValidation } from "../../../../Constants/VALIDATIONS";
+import { AuthAPI } from "../../../../Api";
 
 interface FormValues {
   email: string;
@@ -26,11 +25,11 @@ export default function ForgetPassword() {
 
   const onSubmit = async(data: FormValues) => {
     try {
-      const response = await axios.post(AUTH_URLS.forgetpass , data)
+      const response = await AuthAPI.ForgetPassword(data);
       toast.success(response?.data?.message);
       navigate('/reset')
     } catch (error:any) {
-      toast.error(error?.response?.data?.message)
+      toast.error(error?.response?.data?.error)
     }
   };
 

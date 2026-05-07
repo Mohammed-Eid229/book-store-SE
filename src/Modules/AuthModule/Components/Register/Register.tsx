@@ -4,25 +4,22 @@ import {
   Button,
   FormControl,
   Grid,
-  InputLabel,
-  NativeSelect,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import axios from "axios";
 import { toast } from "react-toastify";
-import { AUTH_URLS } from "../../../../Constants/END-POINTS";
 import { emailValidation, passwordValidation } from "../../../../Constants/VALIDATIONS";
+import { AuthAPI } from "../../../../Api";
 
 interface FormValues {
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  role: string;
+  phoneNumber: string;
 }
 export default function Register() {
   const navigate = useNavigate()
@@ -34,17 +31,17 @@ export default function Register() {
 
   const onSubmit = async(data: FormValues) => {
     try {
-      const response = await axios.post(AUTH_URLS.register , data)
-      toast.success(response?.data?.message);
+      await AuthAPI.Register(data)
+      toast.success("User Created Successfully!");
       navigate('/login')
     } catch (error:any) {
-      toast.error(error?.response?.data?.message)
+      toast.error(error.response?.data?.error)
     }
   };
 
   return (
     <>
-      <Box textAlign="start" mb={3}>
+      <Box textAlign="start" mb={2}>
         <Typography variant="body1" color="textSecondary">
           Create new account
         </Typography>
@@ -64,9 +61,9 @@ export default function Register() {
                 label="First Name"
                 variant="outlined"
                 fullWidth
-                error={!!errors?.first_name}
-                helperText={errors?.first_name?.message}
-                {...register("first_name", {required: "First Name is required!" })}
+                error={!!errors?.firstName}
+                helperText={errors?.firstName?.message}
+                {...register("firstName", {required: "First Name is required!" })}
               />
             </Grid>
 
@@ -78,9 +75,9 @@ export default function Register() {
                 label="Last Name"
                 variant="outlined"
                 fullWidth
-                error={!!errors?.last_name}
-                helperText={errors?.last_name?.message}
-                {...register("last_name", {required: "Last Name is required!" })}
+                error={!!errors?.lastName}
+                helperText={errors?.lastName?.message}
+                {...register("lastName", {required: "Last Name is required!" })}
               />
             </Grid>
           </Grid>
@@ -112,18 +109,16 @@ export default function Register() {
 
           {/* role */}
           <FormControl fullWidth>
-            <InputLabel variant="standard" htmlFor="role">
-              Role
-            </InputLabel>
-            <NativeSelect
-              defaultValue='Admin'
-              {...register("role", { required: "Role is required" })}
-              inputProps={{
-                id: 'role',
-              }}
-            >
-              <option value="Customer">Customer</option>
-            </NativeSelect>
+            <TextField
+              id="phone_number"
+              type="text"
+              label="Phone Number"
+              variant="outlined"
+              fullWidth
+              error={!!errors?.phoneNumber}
+              helperText={errors?.phoneNumber?.message}
+              {...register("phoneNumber", {required: "Phone Number is required!" })}
+            />
           </FormControl>
 
           <Stack direction="column">
