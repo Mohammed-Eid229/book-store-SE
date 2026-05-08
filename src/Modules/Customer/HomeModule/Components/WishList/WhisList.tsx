@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import BreadCrumbs from "../../../../Shared/Components/BreadCrumbs/BreadCrumbs";
 import { Box, Grid } from "@mui/material";
@@ -17,23 +16,24 @@ export default function WhisList() {
   const {userData}:any = useContext(AuthContext);
   const [favBooks , setFavBooks] = useState([]);
 
-  const getMyFav = async () => {
-    const id = userData?.userId; 
-    if (!id) return;
-
-    try {
-      const response = await FavAPI.GetFavourites(id); 
-      const extractedBooks = response?.data.map((item: any) => item.book);
-      
-      setFavBooks(extractedBooks); 
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
+  
   useEffect(()=>{
-    getMyFav();
-  },[userData])
+    const getMyFav = async () => {
+      const id = userData?.userId; 
+      if (!id) return;
+
+      try {
+        const response = await FavAPI.GetFavourites(id); 
+        const extractedBooks = response?.data.map((item: any) => item.book);
+        
+        setFavBooks(extractedBooks); 
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getMyFav()
+  
+  },[userData , favBooks])
   
 
     const books = useBooks(favBooks ?? [] , "favoritesBooksSettings");

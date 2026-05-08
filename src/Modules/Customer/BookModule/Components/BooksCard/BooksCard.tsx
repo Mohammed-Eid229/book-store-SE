@@ -1,8 +1,14 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box, Typography, Button, Stack, Paper, Tooltip, IconButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { FavAPI } from "../../../../../Api";
+import { AuthContext } from "../../../../../Contexts/AuthContext";
+import { toast } from "react-toastify";
+import type { AxiosError } from "axios";
 
 interface Book {
   id: number;
@@ -22,12 +28,62 @@ interface BooksCardProps {
 
 export default function BookCard({ book, view }: BooksCardProps) {
   const navigate = useNavigate();
+  const {userData}:any = useContext(AuthContext);
   const isOutOfStock = book.status === "out of stock";
   const [isFav , setIsFav] = useState(false);
+  const [favBooks, setFavBooks] = useState<Book[]>([]);    
+  
+    useEffect(()=>{
+      const getMyFav = async () => {
+      const id = userData?.userId; 
+      if (!id) return;
+      try {
+        const response = await FavAPI.GetFavourites(id); 
+        const extractedBooks = response?.data.map((item: any) => item.book);
+        
+        setFavBooks(extractedBooks); 
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-  const toggleFav = ()=>{
-    setIsFav(!isFav);
+    getMyFav()
+    },[userData])
+
+    useEffect(() => {
+      const exists = favBooks.some((favBook: any) => favBook.id === book.id);
+      setIsFav(exists);
+    }, [favBooks, book.id]);
+
+  const addToFav = async(userId:number , bookId:number)=>{
+    try {
+      const response = await FavAPI.AddToFavourites( userId , bookId);
+      toast.success(`${response?.data?.book?.title} is Added To Favourites!`)
+      toggleFav();
+    } catch (error) {
+        const err = error as AxiosError<any>;
+        toast.error(
+          err.response?.data?.error || "Something went wrong"
+        );
+    }
   }
+
+  const removeFav = async(userId:number , bookId:number)=>{
+    try {
+      await FavAPI.RemoveFromFavourites( userId , bookId);
+      toast.success("Removed From Favourites!")
+      toggleFav();
+    } catch (error) {
+        const err = error as AxiosError<any>;
+        toast.error(
+          err.response?.data?.error || "Something went wrong"
+        );
+    }
+  }
+
+  const toggleFav = () => {
+    setIsFav((prev) => !prev);
+  };
   return (
     <>
       <Box
@@ -121,7 +177,7 @@ export default function BookCard({ book, view }: BooksCardProps) {
                   "&:hover": { bgcolor: "#FFF", color: "#f52366" },
                   my:3
                 }}
-                onClick={toggleFav}
+                onClick={isFav? () => removeFav(userData.userId, book.id) : () => addToFav(userData.userId, book.id)}
               >
                 {isFav ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
               </IconButton>

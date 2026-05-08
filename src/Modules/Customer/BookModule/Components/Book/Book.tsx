@@ -1,11 +1,15 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box, Button, Grid, Paper, Typography } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { AuthContext } from "../../../../../Contexts/AuthContext";
+import { FavAPI } from "../../../../../Api";
+import { toast } from "react-toastify";
+import type { AxiosError } from "axios";
 
 interface BookProps {
   book: {
@@ -28,11 +32,61 @@ export default function Book({ book, mode = "featured" }: BookProps) {
   const {userData}:any = useContext(AuthContext);
   const navigate = useNavigate();
   const isOutOfStock = book.status.toLowerCase() === "out of stock";
-  const [isFav , setIsFav] = useState(false);
+    const [isFav , setIsFav] = useState(false);
+    const [favBooks, setFavBooks] = useState<BookProps[]>([]);    
+    
+      useEffect(()=>{
+        const getMyFav = async () => {
+        const id = userData?.userId; 
+        if (!id) return;
+        try {
+          const response = await FavAPI.GetFavourites(id); 
+          const extractedBooks = response?.data.map((item: any) => item.book);
+          
+          setFavBooks(extractedBooks); 
+        } catch (error) {
+          console.log(error);
+        }
+      };
   
-    const toggleFav = ()=>{
-      setIsFav(!isFav);
+      getMyFav()
+      },[userData])
+  
+      useEffect(() => {
+        const exists = favBooks.some((favBook: any) => favBook.id === book.id);
+        setIsFav(exists);
+      }, [favBooks, book.id]);
+  
+    const addToFav = async(userId:number , bookId:number)=>{
+      try {
+        const response = await FavAPI.AddToFavourites( userId , bookId);
+        toast.success(`${response?.data?.book?.title} is Added To Favourites!`)
+        toggleFav();
+      } catch (error) {
+          const err = error as AxiosError<any>;
+          toast.error(
+            err.response?.data?.error || "Something went wrong"
+          );
+      }
     }
+  
+    const removeFav = async(userId:number , bookId:number)=>{
+      try {
+        await FavAPI.RemoveFromFavourites( userId , bookId);
+        toast.success("Removed From Favourites!")
+        toggleFav();
+      } catch (error) {
+          const err = error as AxiosError<any>;
+          toast.error(
+            err.response?.data?.error || "Something went wrong"
+          );
+      }
+    }
+  
+    const toggleFav = () => {
+      setIsFav((prev) => !prev);
+    };
+
   return (
     <>
       <Grid container spacing={6} alignItems="center">
@@ -179,7 +233,7 @@ export default function Book({ book, mode = "featured" }: BookProps) {
 
             <Button
                 variant="outlined"
-                onClick={toggleFav}
+                onClick={isFav? () => removeFav(userData.userId, book.id) : () => addToFav(userData.userId, book.id)}
                 sx={{
                   width: "100%",
                   py: 1.5,
