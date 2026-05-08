@@ -40,6 +40,6 @@ export const GetOrdersChartData = () => {
     return axiosClient.get('/admin/statistics/chart/orders');
 }
 
-export const GetLoginStats = (data: any) => {
-    return axiosClient.get('/users/stats/logins', { data });
+export const GetLoginStats = () => {
+    return axiosClient.get('/users/stats/logins');
 }

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { Box, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Typography, Paper } from "@mui/material";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Box, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Typography, Paper, CircularProgress } from "@mui/material";
 import { useFetch } from "../../../../../Hooks/useFetch";
-import { GetBooks, CreateBook, UpdateBook, DeleteBook } from "../../../../../Api/modules/books";
+import { GetBooks, CreateBook, UpdateBook, DeleteBook, GetBooksByCategory } from "../../../../../Api/modules/books";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
@@ -20,6 +20,7 @@ import BooksPagination from "../../../../Customer/BookModule/Components/BooksPag
 import BreadCrumbs from "../../../../Shared/Components/BreadCrumbs/BreadCrumbs";
 import BooksFilter from "../../../../Customer/BookModule/Components/BooksFilter/BooksFilter";
 import { useCategories } from "../../../../../Contexts/CategoriesContext";
+import { CategoriesAPI } from "../../../../../Api";
 
 // ✅ Book interface يدعم الـ field names من الـ API (image) والقديمة (img)
 export interface Book {
@@ -38,13 +39,23 @@ export interface Book {
 }
 
 // ✅ normalize book من الـ API — يوحد الـ fields
-const normalizeBook = (b: any): Book => ({
-  ...b,
-  img: b.img || b.image || b.imagePath || "",
-  image: b.img || b.image || b.imagePath || "",
-  category: b.category || b.categoryName || "",
-  categoryName: b.category || b.categoryName || "",
-});
+const normalizeBook = (b: any): Book => {
+  const baseUrl = "https://upskilling-egypt.com:3007/";
+  const imgPath = b.img || b.image || b.imagePath || "";
+  
+  // تنظيف الـ path والتأكد من عدم وجود //
+  const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  const cleanPath = imgPath.startsWith("/") ? imgPath.slice(1) : imgPath;
+  const fullImg = imgPath ? (imgPath.startsWith("http") ? imgPath : `${cleanBase}/${cleanPath}`) : "";
+  
+  return {
+    ...b,
+    img: fullImg,
+    image: fullImg,
+    category: b.category || b.categoryName || "",
+    categoryName: b.category || b.categoryName || "",
+  };
+};
 
 interface BookForm {
   title: string;
@@ -240,7 +251,17 @@ function BookDialog({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminBooks() {
-  const { data: booksData, loading, refresh } = useFetch(GetBooks);
+  const [appliedCategory, setAppliedCategory] = useState<string>("");
+
+  const { data: booksData, loading, refresh } = useFetch(
+    () => appliedCategory 
+      ? GetBooksByCategory(appliedCategory) 
+      : GetBooks(), 
+    [appliedCategory]
+  );
+
+  const { data: categoriesData } = useFetch(() => CategoriesAPI.GetCategories());
+  const categoriesList = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data || [];
 
   // ✅ normalize كل الكتب عشان توحد img/image/imagePath و category/categoryName
   const rawList: any[] = Array.isArray(booksData) ? booksData : (booksData as any)?.data || (booksData as any)?.books || [];
@@ -253,6 +274,12 @@ export default function AdminBooks() {
 
   const { filters, setPrice, toggleFilter, filteredBooks, applyFilters } = useFilters(booksList as any);
   const books = useBooks(filteredBooks as any, "admin-books-settings");
+
+  const handleApplyFilters = useCallback(() => {
+    const selectedCategoryName = filters.types.length > 0 ? filters.types[0] : "";
+    setAppliedCategory(selectedCategoryName);
+    applyFilters(); 
+  }, [filters.types, applyFilters]);
 
   const handleAdd = async (formData: FormData) => {
     try {
@@ -334,15 +361,21 @@ export default function AdminBooks() {
         <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 2, borderRadius: 2 }}>
             <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
-              <BooksFilter filters={filters} setPrice={setPrice} toggleFilter={toggleFilter} applyFilters={applyFilters} />
+              <BooksFilter 
+                filters={filters} 
+                setPrice={setPrice} 
+                toggleFilter={toggleFilter} 
+                applyFilters={handleApplyFilters} 
+                categories={categoriesList ? categoriesList.map((cat: any) => cat.name) : []}
+              />
               <BooksToolbar
                 view={books.view}
-                onViewChange={books.setView}
+                setView={books.setView}
                 sortBy={books.sortBy}
-                onSortChange={books.setSortBy}
+                setSortBy={books.setSortBy}
                 itemsPerPage={books.itemsPerPage}
-                onItemsPerPageChange={books.setItemsPerPage}
-                totalItems={books.total}
+                setItemsPerPage={books.setItemsPerPage}
+                total={books.total}
                 startIndex={books.startIndex}
               />
             </Box>
@@ -350,12 +383,18 @@ export default function AdminBooks() {
         </Grid>
 
         <Grid size={{ xs: 12 }}>
-          <AdminBooksList
-            currentBooks={books.currentBooks as any}
-            view={books.view}
-            onEdit={openEditDialog}
-            onDelete={openDeleteDialog}
-          />
+          {loading ? (
+             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                <CircularProgress size="3rem" sx={{ color: '#ED553B' }} />
+             </Box>
+          ) : (
+            <AdminBooksList
+              currentBooks={books.currentBooks as any}
+              view={books.view}
+              onEdit={openEditDialog}
+              onDelete={openDeleteDialog}
+            />
+          )}
         </Grid>
 
         <Grid size={{ xs: 12 }}>

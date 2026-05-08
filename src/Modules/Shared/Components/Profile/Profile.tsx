@@ -219,6 +219,7 @@ export default function Profile() {
         lastName: profileData.lastName,
         email: profileData.email,
         phone: profileData.phone,
+        
       });
     }
   }, [profileData, resetProfile]);
@@ -238,7 +239,6 @@ export default function Profile() {
       if (userId) {
         await UpdateUserProfile(Number(userId), formData);
 
-        // ✅ حدّث الـ state علطول عشان الـ UI يتغير فوراً
         setProfileData(prev => prev ? {
           ...prev,
           firstName: data.firstName,
@@ -258,22 +258,37 @@ export default function Profile() {
 
   const handlePasswordChange = async (data: PasswordFormValues) => {
     try {
+
+      if (data.newPassword.length < 8) {
+        toast.error('Password must be at least 8 characters');
+        return;
+      }
+
       if (data.newPassword !== data.confirmPassword) {
         toast.error('Passwords do not match!');
         return;
       }
+
       const userId = userData?.id || userData?.userId;
+
       if (userId) {
         await AuthAPI.ChangePassword(Number(userId), {
           oldPassword: data.oldPassword,
           newPassword: data.newPassword
         });
+
         toast.success('Password changed successfully!');
         setResetPassOpen(false);
         resetPass();
       }
+
     } catch (error: any) {
-      const msg = error.response?.data?.message || error.response?.data?.error || 'Failed to change password';
+
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Failed to change password';
+
       toast.error(msg);
     }
   };
@@ -428,27 +443,67 @@ export default function Profile() {
 
       {/* Change Password Dialog */}
       <Dialog open={resetPassOpen} onClose={() => setResetPassOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ borderBottom: '1px solid #eee', px: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight={700}>Reset Password</Typography>
-          <IconButton onClick={() => setResetPassOpen(false)}><CloseIcon /></IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ p: 3, mt: 1 }}>
-          <Stack spacing={3}>
-            <TextField label="Old Password" type="password" fullWidth {...passReg('oldPassword')} />
-            <TextField label="New Password" type="password" fullWidth {...passReg('newPassword')} />
-            <TextField label="Confirm New Password" type="password" fullWidth {...passReg('confirmPassword')} />
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setResetPassOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handlePassSubmit(handlePasswordChange)}
-            sx={{ bgcolor: '#ED553B', '&:hover': { bgcolor: '#d94a2f' } }}
+        <form onSubmit={handlePassSubmit(handlePasswordChange)}>
+          <DialogTitle
+            sx={{
+              borderBottom: '1px solid #eee',
+              px: 3,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
           >
-            Update Password
-          </Button>
-        </DialogActions>
+            <Typography variant="h6" fontWeight={700}>
+              Reset Password
+            </Typography>
+
+            <IconButton onClick={() => setResetPassOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent sx={{ p: 3, mt: 1 }}>
+            <Stack spacing={3}>
+              <TextField
+                label="Old Password"
+                type="password"
+                fullWidth
+                {...passReg('oldPassword')}
+              />
+
+              <TextField
+                label="New Password"
+                type="password"
+                fullWidth
+                {...passReg('newPassword')}
+              />
+
+              <TextField
+                label="Confirm New Password"
+                type="password"
+                fullWidth
+                {...passReg('confirmPassword')}
+              />
+            </Stack>
+          </DialogContent>
+
+          <DialogActions sx={{ p: 3 }}>
+            <Button onClick={() => setResetPassOpen(false)}>
+              Cancel
+            </Button>
+
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                bgcolor: '#ED553B',
+                '&:hover': { bgcolor: '#d94a2f' }
+              }}
+            >
+              Update Password
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );

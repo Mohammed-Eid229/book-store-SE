@@ -4,7 +4,7 @@ import {
   Typography,
   Paper,
 } from '@mui/material';
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { AuthContext } from '../../../../../Contexts/AuthContext';
 import PeopleIcon from '@mui/icons-material/People';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -16,18 +16,16 @@ import {
   Cell,
   Legend,
   Tooltip,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
 } from 'recharts';
 
 import { useFetch } from '../../../../../Hooks/useFetch';
-import { GetAllUsers, GetAllOrders, GetStatistics, GetOrdersChartData } from '../../../../../Api/modules/admins';
+import { GetAllUsers, GetAllOrders, GetStatistics, GetOrdersChartData, GetLoginStats } from '../../../../../Api/modules/admins';
 import { GetBooks } from '../../../../../Api/modules/books';
 
 export default function AdminHome() {
@@ -42,7 +40,8 @@ export default function AdminHome() {
 
   // ✅ جرب تجيب الـ statistics العادية برضو (ممكن تشتغل لو الـ backend اتصلح)
   const { data: statsData } = useFetch(GetStatistics);
-  const { data: chartData } = useFetch(GetOrdersChartData);
+  const { data: chartData, loading: chartLoading } = useFetch(GetOrdersChartData);
+  const { data: loginStatsData, loading: loginsLoading } = useFetch(GetLoginStats);
 
   // ✅ احسب الـ stats من الـ data الموجودة لو الـ /admin/statistics فاشل
   const usersList = Array.isArray(usersData) ? usersData : (usersData as any)?.data || [];
@@ -62,32 +61,78 @@ export default function AdminHome() {
   const totalBooks = statsData?.totalBooks ?? statsData?.booksCount ?? booksList.length;
   const totalOrders = statsData?.totalOrders ?? statsData?.ordersCount ?? ordersList.length;
 
-  const isLoading = usersLoading || ordersLoading || booksLoading;
+  const isLoading = usersLoading || ordersLoading || booksLoading || chartLoading || loginsLoading;
 
-  // ✅ بيانات الـ Pie Chart — من الـ orders chart API أو من الـ orders الموجودة
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  // ✅ بيانات الـ Pie Chart للـ Orders
+ const pieData = useMemo(() => {
+  const daysOrder = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const pieData: { name: string; value: number }[] = (() => {
-    if (Array.isArray(chartData) && chartData.length > 0) {
-      return chartData.map((item: any, i: number) => ({
-        name: item.name || item.day || days[i] || `Day ${i + 1}`,
-        value: item.value || item.count || item.orders || 0,
-      }));
-    }
-    // احسب من الـ orders الموجودة حسب اليوم
-    const dayCounts: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
-    ordersList.forEach((order: any) => {
-      if (order.date) {
-        const d = new Date(order.date);
-        const dayName = days[d.getDay() === 0 ? 6 : d.getDay() - 1];
-        dayCounts[dayName] = (dayCounts[dayName] || 0) + 1;
+  const dayCounts: Record<string, number> = {
+    'Sun': 0,
+    'Mon': 0,
+    'Tue': 0,
+    'Wed': 0,
+    'Thu': 0,
+    'Fri': 0,
+    'Sat': 0
+  };
+
+  const orders = Array.isArray(ordersData)
+    ? ordersData
+    : (ordersData as any)?.data || [];
+
+  if (orders.length > 0) {
+    orders.forEach((order: any) => {
+      const dateStr =
+        order.createdAt ||
+        order.date ||
+        order.creationDate;
+
+      if (dateStr) {
+        const d = new Date(dateStr);
+
+        if (!isNaN(d.getTime())) {
+          const dayName = daysOrder[d.getDay()];
+          dayCounts[dayName]++;
+        }
       }
     });
-    return days.map(d => ({ name: d, value: dayCounts[d] }));
-  })();
+  }
 
-  // ✅ Bar chart بدل Line chart للـ orders per day (أوضح)
-  const barData = pieData.map(d => ({ day: d.name, orders: d.value }));
+  const sortedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  return sortedDays.map(day => ({
+    name: day,
+    value: dayCounts[day]
+  }));
+}, [ordersData]);
+
+  // ✅ بيانات الـ Line Chart للـ Login Statistics (Visits) - دائماً 7 أيام
+  const visitsChartData = useMemo(() => {
+    const daysOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    // 1. عمل Template بـ 7 أيام وقيمهم 0
+    const template: Record<string, number> = {
+      'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0
+    };
+
+    // 2. دمج بيانات الـ API في الـ Template
+    const rawData = loginStatsData?.data || loginStatsData || {};
+    Object.entries(rawData).forEach(([date, count]) => {
+      const d = new Date(date);
+      const dayName = dayNames[d.getDay()];
+      if (template[dayName] !== undefined) {
+        template[dayName] += Number(count);
+      }
+    });
+
+    // 3. تحويل الـ Template لـ Array مرتب حسب أيام الأسبوع
+    return daysOrder.map(day => ({
+      date: day,
+      visits: template[day]
+    }));
+  }, [loginStatsData]);
 
   const PIE_COLORS = ['#2ecc71', '#e74c3c', '#F5A623', '#3498db', '#9b59b6', '#6a2784', '#34495e'];
 
@@ -119,10 +164,15 @@ export default function AdminHome() {
   ];
 
   if (isLoading) {
-    return <Typography sx={{ p: 3 }}>Loading statistics...</Typography>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <Typography variant="h6" color="text.secondary">Loading dashboard data...</Typography>
+      </Box>
+    );
   }
 
   const hasPieData = pieData.some(d => d.value > 0);
+  const hasVisitsData = visitsChartData.length > 0;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -168,12 +218,12 @@ export default function AdminHome() {
       <Grid container spacing={3}>
         {/* Pie Chart — Orders Last 7 Days */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid #eee' }}>
-            <Typography variant="subtitle1" fontWeight={700} mb={2}>
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid #eee', height: '100%' }}>
+            <Typography variant="subtitle1" fontWeight={700} mb={3}>
               Orders Last 7 Days
             </Typography>
             {hasPieData ? (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -181,40 +231,53 @@ export default function AdminHome() {
                     cy="50%"
                     outerRadius={100}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                    labelLine={false}
+                    labelLine={true}
+                    label={({ name, percent, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
                   >
                     {pieData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  <Legend verticalAlign="bottom" height={36} iconType="square" />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <Box sx={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
-                <Typography variant="body2">No orders data available yet</Typography>
+              <Box sx={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', textAlign: 'center' }}>
+                <Typography variant="body2">No orders distribution data</Typography>
               </Box>
             )}
           </Paper>
         </Grid>
 
-        {/* Bar Chart — Orders per Day */}
+        {/* Line Chart — Last Visits */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid #eee' }}>
-            <Typography variant="subtitle1" fontWeight={700} mb={2}>
-              Orders Per Day
+          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: '1px solid #eee', height: '100%' }}>
+            <Typography variant="subtitle1" fontWeight={700} mb={3}>
+              Last Visits
             </Typography>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="orders" fill="#ED553B" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {hasVisitsData ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={visitsChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} axisLine={true} tickLine={true} />
+                  <YAxis tick={{ fontSize: 12 }} axisLine={true} tickLine={true} allowDecimals={false} />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="visits" 
+                    stroke="#F5A623" 
+                    strokeWidth={3}
+                    dot={{ r: 6, fill: '#F5A623', strokeWidth: 2, stroke: '#fff' }}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <Box sx={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
+                <Typography variant="body2">No visits statistics available</Typography>
+              </Box>
+            )}
           </Paper>
         </Grid>
       </Grid>

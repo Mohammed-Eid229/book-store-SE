@@ -66,7 +66,7 @@ export default function BookCard({ book, view }: BooksCardProps) {
           >
             <Box
               component="img"
-              src={`/api/images/books/${book.image}`}
+              src={book.image ? (book.image.startsWith("http") ? book.image : `https://upskilling-egypt.com:3007/${book.image}`) : ""}
               alt={book.title}
               sx={{
                 width: "100%",

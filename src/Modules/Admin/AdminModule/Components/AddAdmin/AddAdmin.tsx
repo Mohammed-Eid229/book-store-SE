@@ -148,16 +148,6 @@ export default function AdminForm({ open, onClose, onSubmitAction, initialData, 
 
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
-              label="Age"
-              placeholder="Enter Age"
-              type="number"
-              fullWidth
-              {...register('age')}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
               label="Phone Number"
               placeholder="Enter Phone Number"
               fullWidth

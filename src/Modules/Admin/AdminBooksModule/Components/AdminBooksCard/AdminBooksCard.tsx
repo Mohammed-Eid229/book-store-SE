@@ -160,8 +160,7 @@ export default function AdminBooksCard({ book, view, onDelete, onEdit }: AdminBo
 
           {view === "list" && (
             <Typography variant="body2" color="text.secondary" sx={{ my: 1 }}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              {book.description || "No description available for this book."}
             </Typography>
           )}
 

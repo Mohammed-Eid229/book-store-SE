@@ -1,101 +1,122 @@
-import book1 from '../../../../../assets/Images/book1.jpg';
-import book2 from '../../../../../assets/Images/book2.webp';
-import book3 from '../../../../../assets/Images/book3.webp';
-import book4 from '../../../../../assets/Images/book4.webp';
-import book5 from '../../../../../assets/Images/book5.png';
-import book6 from '../../../../../assets/Images/book6.png';
-import book7 from '../../../../../assets/Images/book7.png';
-import book8 from '../../../../../assets/Images/book8.jpg';
-import book9 from '../../../../../assets/Images/book9.webp';
-import book10 from '../../../../../assets/Images/book10.jpg';
-import book11 from '../../../../../assets/Images/book11.jpg';
-import book12 from '../../../../../assets/Images/book12.webp';
-import book13 from '../../../../../assets/Images/book13.jpg';
-import book14 from '../../../../../assets/Images/book14.webp';
-import book15 from '../../../../../assets/Images/book15.webp';
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import NotFound from '../../../../Shared/Components/NotFound/NotFound.tsx';
-import { Box, Container, Grid, Paper, Typography, Button, Stack, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton } from '@mui/material';
+import { Box, Container, Grid, Paper, Typography, Button, Stack, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, CircularProgress } from '@mui/material';
 import BreadCrumbs from '../../../../Shared/Components/BreadCrumbs/BreadCrumbs.tsx';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import { useFetch } from '../../../../../Hooks/useFetch.ts';
+import { GetBookById, UpdateBook, DeleteBook } from '../../../../../Api/modules/books.ts';
+import { Autocomplete } from "@mui/material";
+import { useCategories } from "../../../../../Contexts/CategoriesContext";
 
-const allBooks = [
-    { id: 1,  title: "the design of books",                     category: "Drama",    author: "debbie berne",   price: 38.00, img: book1,  status: "in stock", quantity: 50 },
-    { id: 2,  title: "the lost",                                category: "Fantasy",  author: "matt zhang",     price: 46.00, img: book2,  status: "in stock", quantity: 30 },
-    { id: 3,  title: "The moon and the stars",                  category: "Drama",    author: "Jenna Warren",   price: 62.00, img: book3,  status: "in stock", quantity: 20 },
-    { id: 4,  title: "the green solider",                       category: "Drama",    author: "J. Edward Gore", price: 50.00, img: book4,  status: "in stock", quantity: 15 },
-    { id: 5,  title: "the hypocrite world",                     category: "Drama",    author: "sophia hill",    price: 35.00, img: book5,  status: "out of stock", quantity: 0 },
-    { id: 6,  title: "my book cover",                          category: "Drama",    author: "author",         price: 41.00, img: book6,  status: "in stock", quantity: 10 },
-    { id: 7,  title: "your simple book cover",                  category: "Fantasy",  author: "ken adams",      price: 55.00, img: book7,  status: "out of stock", quantity: 0 },
-    { id: 8,  title: "book name",                              category: "Children", author: "author name",    price: 55.00, img: book8,  status: "in stock", quantity: 25 },
-    { id: 9,  title: "harry potter and the champer of secrets", category: "Fantasy",  author: "J.K.Rowling",    price: 70.00, img: book9,  status: "in stock", quantity: 40 },
-    { id: 10, title: "all the light we cannot see",             category: "Drama",    author: "Antony Doerr",   price: 55.00, img: book10, status: "in stock", quantity: 12 },
-    { id: 11, title: "beyond the ocean door",                   category: "Drama",    author: "amisha sathi",   price: 55.00, img: book11, status: "in stock", quantity: 8 },
-    { id: 12, title: "really good actually",                    category: "Drama",    author: "monica heisey",  price: 75.00, img: book12, status: "out of stock", quantity: 0 },
-    { id: 13, title: "lady bird",                              category: "Children", author: "author name",    price: 40.00, img: book13, status: "in stock", quantity: 33 },
-    { id: 14, title: "dark becomes her",                        category: "Fantasy",  author: "author name",    price: 67.00, img: book14, status: "in stock", quantity: 18 },
-    { id: 15, title: "the story of a lonely boy",               category: "Drama",    author: "korina",         price: 58.50, img: book15, status: "in stock", quantity: 22 },
-  ]
+// ✅ Book interface (Matches AdminBooks.tsx)
+export interface Book {
+  id: number;
+  title: string;
+  category: string;
+  categoryName?: string;
+  author: string;
+  price: number;
+  img: string;       
+  image?: string;    
+  imagePath?: string;
+  status: string;
+  quantity: number;
+  description?: string;
+}
+
+// ✅ normalize book (Matches AdminBooks.tsx)
+const normalizeBook = (b: any): Book => {
+  const baseUrl = "https://upskilling-egypt.com:3007/";
+  const imgPath = b.img || b.image || b.imagePath || "";
+  
+  const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  const cleanPath = imgPath.startsWith("/") ? imgPath.slice(1) : imgPath;
+  const fullImg = imgPath ? (imgPath.startsWith("http") ? imgPath : `${cleanBase}/${cleanPath}`) : "";
+  
+  return {
+    ...b,
+    img: fullImg,
+    image: fullImg,
+    category: b.category || b.categoryName || "",
+    categoryName: b.category || b.categoryName || "",
+  };
+};
 
 interface BookForm {
   title: string;
   author: string;
   category: string;
   price: string;
+  status: string;
   quantity: string;
+  description: string;
 }
 
 function BookEditDialog({ open, onClose, onSubmitAction, initialData }: { 
   open: boolean; 
   onClose: () => void; 
-  onSubmitAction: (data: BookForm & { img: string }) => void; 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialData: any;
+  onSubmitAction: (data: FormData) => void; 
+  initialData: Book;
 }) {
+  const { categories } = useCategories();
+  const categoryOptions = categories.map((c) => c.name);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<BookForm>();
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<BookForm>();
 
   useEffect(() => {
-    if (open) {
+    if (open && initialData) {
       reset({
-        title: initialData?.title || "",
-        author: initialData?.author || "",
-        category: initialData?.category || "",
-        price: initialData?.price?.toString() || "",
-        quantity: initialData?.quantity?.toString() || "0",
+        title: initialData.title || "",
+        author: initialData.author || "",
+        category: initialData.category || initialData.categoryName || "",
+        price: initialData.price?.toString() || "",
+        status: initialData.status || "available",
+        quantity: initialData.quantity?.toString() || "0",
+        description: initialData.description || "",
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPreview(initialData?.img || null);
+      setPreview(initialData.img || null);
+      setSelectedFile(null);
     }
   }, [open, initialData, reset]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
+      reader.onloadend = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
   const removeImage = () => {
     setPreview(null);
+    setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const onSubmit = (data: BookForm) => {
-    onSubmitAction({ ...data, img: preview || book1 });
+    const formData = new FormData();
+    formData.append("title", data.title);
+    formData.append("author", data.author);
+    formData.append("categoryName", data.category);
+    formData.append("price", data.price);
+    formData.append("quantity", data.quantity);
+    formData.append("status", data.status);
+    formData.append("description", data.description);
+    if (selectedFile) formData.append("file", selectedFile);
+    
+    onSubmitAction(formData);
     onClose();
   };
 
@@ -108,10 +129,46 @@ function BookEditDialog({ open, onClose, onSubmitAction, initialData }: {
       <DialogContent sx={{ pt: 3 }}>
         <Grid container spacing={3} mt={0}>
           <Grid size={{ xs: 12, md: 6 }}><TextField label="Title" fullWidth error={!!errors.title} helperText={errors.title?.message} {...register("title", { required: "Title is required" })} /></Grid>
-          <Grid size={{ xs: 12, md: 6 }}><TextField label="Author" fullWidth {...register("author")} /></Grid>
-          <Grid size={{ xs: 12, md: 6 }}><TextField label="Price" type="number" fullWidth {...register("price")} /></Grid>
-          <Grid size={{ xs: 12, md: 6 }}><TextField label="Quantity" type="number" fullWidth {...register("quantity")} /></Grid>
+          <Grid size={{ xs: 12, md: 6 }}><TextField label="Author" fullWidth {...register("author", { required: "Author is required" })} /></Grid>
           
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Controller
+              name="category"
+              control={control}
+              rules={{ required: "Category is required" }}
+              render={({ field: { onChange, value } }) => (
+                <Autocomplete
+                  options={categoryOptions}
+                  value={value || null}
+                  onChange={(_, newValue) => onChange(newValue ?? "")}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Category" placeholder="Search or select" error={!!errors.category} helperText={errors.category?.message} />
+                  )}
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}><TextField label="Price" type="number" fullWidth {...register("price", { required: "Price is required" })} /></Grid>
+          <Grid size={{ xs: 12, md: 6 }}><TextField label="Quantity" type="number" fullWidth {...register("quantity", { required: "Quantity is required" })} /></Grid>
+          
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              label="Status"
+              select
+              SelectProps={{ native: true }}
+              fullWidth
+              {...register("status", { required: "Status is required" })}
+            >
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
+            </TextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <TextField label="Description" multiline rows={3} fullWidth {...register("description")} />
+          </Grid>
+
           <Grid size={{ xs: 12, md: 6 }}>
             <Box>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', fontWeight: 600 }}>
@@ -149,7 +206,7 @@ function BookEditDialog({ open, onClose, onSubmitAction, initialData }: {
         </Grid>
       </DialogContent>
       <DialogActions sx={{ p: 3, pt: 1 }}>
-        <Button variant="contained" fullWidth onClick={handleSubmit(onSubmit)} sx={{ bgcolor: "#ED553B", "&:hover": { bgcolor: "#ED553B" }, py: 1.5, fontWeight: 600 }}>Save Changes</Button>
+        <Button variant="contained" fullWidth onClick={handleSubmit(onSubmit)} sx={{ bgcolor: "#ED553B", "&:hover": { bgcolor: "#d94a2f" }, py: 1.5, fontWeight: 600 }}>Save Changes</Button>
       </DialogActions>
     </Dialog>
   );
@@ -159,35 +216,46 @@ export default function AdminBookDetails() {
     const { bookId } = useParams();
     const navigate = useNavigate();
     const [editOpen, setEditOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+
+    const { data: bookRaw, loading, refresh } = useFetch(() => GetBookById(bookId), [bookId]);
     
-    // Use state to manage the book data so edits are reflected in the UI
-    const [bookData, setBookData] = useState(() => 
-      allBooks.find((b) => b.id === Number(bookId))
-    );
+    const bookData: Book | null = bookRaw ? normalizeBook(bookRaw) : null;
+
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <CircularProgress sx={{ color: '#ED553B' }} />
+    </Box>
+  );
 
   if(!bookData) return <NotFound/>
 
-  const isOutOfStock = bookData.status.toLowerCase() === "out of stock";
+  const isOutOfStock = bookData.status?.toLowerCase() === "out of stock" || bookData.quantity === 0;
 
-  const onEditSubmit = (data: BookForm & { img: string }) => {
-    // Update local state to reflect changes in the UI
-    setBookData((prev) => ({
-      ...prev!,
-      title: data.title,
-      author: data.author,
-      price: parseFloat(data.price),
-      quantity: parseInt(data.quantity),
-      img: data.img || book1,
-      status: parseInt(data.quantity) > 0 ? "in stock" : "out of stock"
-    }));
-    
-    toast.success("Book updated successfully!");
-    setEditOpen(false);
+  const onEditSubmit = async (formData: FormData) => {
+    try {
+      await UpdateBook(bookData.id, formData);
+      toast.success("Book updated successfully!");
+      refresh();
+      setEditOpen(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update book");
+    }
+  };
+
+  const onDeleteConfirm = async () => {
+    try {
+      await DeleteBook(bookData.id);
+      toast.success("Book deleted successfully!");
+      navigate('/admin/books');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to delete book");
+    }
   };
 
   return (
     <>
-      <Box><BreadCrumbs /></Box>
+      <Box sx={{ px: 3, pt: 3 }}><BreadCrumbs /></Box>
       <Box py={3}>
         <Container>
           <Button 
@@ -279,16 +347,23 @@ export default function AdminBookDetails() {
                 </Typography>
 
                 <Typography variant="body2" color="#7A7A7A" my={2}>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eu
-                  feugiat amet, libero ipsum enim pharetra hac.
+                  {bookData.description || "No description available for this book."}
                 </Typography>
 
                 <Typography variant="h6" color="#ED553B" mt={3}>
-                  $ {bookData.price.toFixed(2)}
+                  $ {Number(bookData.price).toFixed(2)}
                 </Typography>
 
                 <Typography variant="body1" color="#393280" mt={2} fontWeight="600">
                   Available Quantity: {bookData.quantity}
+                </Typography>
+                
+                <Typography variant="body2" color="#393280" mt={1}>
+                  Category: {bookData.categoryName || bookData.category}
+                </Typography>
+                
+                <Typography variant="body2" color="#393280" mt={1}>
+                  Status: {bookData.status}
                 </Typography>
               </Box>
 
@@ -304,7 +379,7 @@ export default function AdminBookDetails() {
                       flex: 1,
                       py: 1.5,
                       border: 0,
-                      borderRadius: 0,
+                      borderRadius: 1,
                       textTransform: "uppercase",
                       fontWeight: "medium",
                       "&:hover": {
@@ -316,18 +391,23 @@ export default function AdminBookDetails() {
                   </Button>
                   <Button
                     variant="outlined"
-                    onClick={() => navigate('/admin/books')}
+                    startIcon={<DeleteIcon />}
+                    onClick={() => setDeleteOpen(true)}
                     sx={{
-                      color: "#393280",
-                      borderColor: "#393280",
+                      color: "#e74c3c",
+                      borderColor: "#e74c3c",
                       flex: 1,
                       py: 1.5,
-                      borderRadius: 0,
+                      borderRadius: 1,
                       textTransform: "uppercase",
                       fontWeight: "medium",
+                      "&:hover": {
+                        borderColor: "#c0392b",
+                        bgcolor: 'rgba(231, 76, 60, 0.05)'
+                      }
                     }}
                   >
-                    Back to List
+                    Delete Book
                   </Button>
                 </Stack>
               </Box>
@@ -342,6 +422,18 @@ export default function AdminBookDetails() {
         onSubmitAction={onEditSubmit} 
         initialData={bookData} 
       />
+
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete "{bookData.title}"? This action cannot be undone.</Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button onClick={onDeleteConfirm} variant="contained" color="error">Delete</Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }
+

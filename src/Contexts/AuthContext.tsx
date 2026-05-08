@@ -14,7 +14,6 @@ interface User{
     email?: string;
     role: string;
     phoneNumber?: string;
-    age?: string;
     image?: string;
 }
 
