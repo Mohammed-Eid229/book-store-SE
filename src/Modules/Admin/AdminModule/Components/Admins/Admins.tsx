@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
@@ -6,9 +7,10 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import AdminForm, { type AdminFormValues } from '../AddAdmin/AddAdmin';
-import { GetAllUsers, CreateAdmin, DeleteUser } from '../../../../../Api/modules/admins';
+import { CreateAdmin } from '../../../../../Api/modules/admins';
 import { toast } from 'react-toastify';
 import axiosClient from '../../../../../Api/axiosClient';
+import { DeleteUser, GetAllUsers } from '../../../../../Api/modules/users';
 
 const getInitials = (first: string, last: string) =>
   `${first?.[0] || ''}${last?.[0] || ''}`.toUpperCase();

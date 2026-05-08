@@ -53,7 +53,7 @@ export default function AdminBooksCard({ book, view, onDelete, onEdit }: AdminBo
         >
           <Box
             component="img"
-            src={book.img}
+            src={`/api/images/books/${book.image}`}
             alt={book.title}
             sx={{
               width: "100%",

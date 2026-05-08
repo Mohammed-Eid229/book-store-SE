@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Avatar, IconButton, Tooltip, CircularProgress,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { GetAllUsers, DeleteUser } from '../../../../../Api/modules/admins';
+import { GetAllUsers, DeleteUser } from '../../../../../Api/modules/users';
 import { toast } from 'react-toastify';
 import { decodeJwt, getStoredToken } from '../../../../../utils/jwtHelper';
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
@@ -30,7 +31,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { AuthContext } from '../../../../Contexts/AuthContext';
-import { UpdateUserProfile } from '../../../../Api/modules/admins';
+import { UpdateUserProfile } from '../../../../Api/modules/users';
 import { AuthAPI } from '../../../../Api';
 import axiosClient from '../../../../Api/axiosClient';
 
@@ -45,7 +46,6 @@ interface ProfileFormValues {
 interface PasswordFormValues {
   oldPassword: string;
   newPassword: string;
-  confirmPassword: string;
 }
 
 interface Book {
@@ -264,11 +264,6 @@ export default function Profile() {
         return;
       }
 
-      if (data.newPassword !== data.confirmPassword) {
-        toast.error('Passwords do not match!');
-        return;
-      }
-
       const userId = userData?.id || userData?.userId;
 
       if (userId) {
@@ -318,7 +313,7 @@ export default function Profile() {
           {/* Header */}
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} alignItems={{ xs: 'center', md: 'flex-end' }} sx={{ mb: 6 }}>
             <Box sx={{ position: 'relative', mt: -10 }}>
-              <Avatar src={profileImg || ''} sx={{ width: 160, height: 160, bgcolor: '#ED553B', fontSize: 48, fontWeight: 700, border: '6px solid #fff', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+              <Avatar src={`/api/images/users/${profileImg}`} sx={{ width: 160, height: 160, bgcolor: '#ED553B', fontSize: 48, fontWeight: 700, border: '6px solid #fff', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
                 {!profileImg && getInitials()}
               </Avatar>
               <IconButton onClick={() => fileInputRef.current?.click()} sx={{ position: 'absolute', bottom: 8, right: 8, bgcolor: '#393280', color: '#fff', '&:hover': { bgcolor: '#2a2560' }, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', width: 40, height: 40 }}>
@@ -476,13 +471,6 @@ export default function Profile() {
                 type="password"
                 fullWidth
                 {...passReg('newPassword')}
-              />
-
-              <TextField
-                label="Confirm New Password"
-                type="password"
-                fullWidth
-                {...passReg('confirmPassword')}
               />
             </Stack>
           </DialogContent>

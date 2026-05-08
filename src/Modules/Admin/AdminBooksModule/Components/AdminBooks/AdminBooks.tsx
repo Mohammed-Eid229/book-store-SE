@@ -32,32 +32,13 @@ export interface Book {
   categoryName?: string;
   author: string;
   price: number;
-  img: string;       // للـ UI القديمة
-  image?: string;    // الاسم الجاي من الـ API
+  image: string;
   imagePath?: string;
   status: string;
   quantity: number;
   description?: string;
 }
 
-// ✅ normalize book من الـ API — يوحد الـ fields
-const normalizeBook = (b: any): Book => {
-  const baseUrl = "https://upskilling-egypt.com:3007/";
-  const imgPath = b.img || b.image || b.imagePath || "";
-  
-  // تنظيف الـ path والتأكد من عدم وجود //
-  const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-  const cleanPath = imgPath.startsWith("/") ? imgPath.slice(1) : imgPath;
-  const fullImg = imgPath ? (imgPath.startsWith("http") ? imgPath : `${cleanBase}/${cleanPath}`) : "";
-  
-  return {
-    ...b,
-    img: fullImg,
-    image: fullImg,
-    category: b.category || b.categoryName || "",
-    categoryName: b.category || b.categoryName || "",
-  };
-};
 
 interface BookForm {
   title: string;
@@ -102,7 +83,7 @@ function BookDialog({
 
   useEffect(() => {
     if (open) {
-      const imgSrc = initialData?.img || initialData?.image || initialData?.imagePath || null;
+      const imgSrc = initialData?.image || null;
       setPreview(imgSrc);
       setSelectedFile(null);
       reset({
@@ -265,16 +246,13 @@ export default function AdminBooks() {
   const { data: categoriesData } = useFetch(() => CategoriesAPI.GetCategories());
   const categoriesList = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data || [];
 
-  // ✅ normalize كل الكتب عشان توحد img/image/imagePath و category/categoryName
-  const rawList: any[] = Array.isArray(booksData) ? booksData : (booksData as any)?.data || (booksData as any)?.books || [];
-  const booksList: Book[] = rawList.map(normalizeBook);
 
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
-  const { filters, setPrice, toggleFilter, filteredBooks, applyFilters } = useFilters(booksList as any);
+  const { filters, setPrice, toggleFilter, filteredBooks, applyFilters } = useFilters(booksData?? [] as any);
   const books = useBooks(filteredBooks as any, "admin-books-settings");
 
   const handleApplyFilters = useCallback(() => {
@@ -326,16 +304,16 @@ export default function AdminBooks() {
   };
 
   const openDeleteDialog = (id: number) => {
-    const book = booksList.find((b) => b.id === id);
+    const book = booksData.find((b:any) => b.id === id);
     if (book) {
       setSelectedBook(book);
       setDeleteOpen(true);
     }
   };
 
-  if (loading && booksList.length === 0) {
-    return <Typography sx={{ p: 3 }}>Loading books...</Typography>;
-  }
+if (loading && (!booksData || booksData.length === 0)) {
+  return <Typography sx={{ p: 3 }}>Loading books...</Typography>;
+}
 
   return (
     <Box>
@@ -344,7 +322,7 @@ export default function AdminBooks() {
         <Typography variant="h5" fontWeight={700}>
           Books Management
           <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-            ({booksList.length})
+            ({booksData.length})
           </Typography>
         </Typography>
         <Button

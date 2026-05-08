@@ -88,7 +88,7 @@ export default function HomeCateg() {
                   <SwiperSlide key={categ.id}>
                     <Stack direction='column' spacing={2} textAlign='center'>
                       <img 
-                        src={categ.image ? (categ.image.startsWith("http") ? categ.image : `https://upskilling-egypt.com:3007/${categ.image}`) : ""} 
+                        src={`/api/images/categories/${categ.image}`} 
                         alt={categ.name} 
                         style={{ 
                           width: '100%', 

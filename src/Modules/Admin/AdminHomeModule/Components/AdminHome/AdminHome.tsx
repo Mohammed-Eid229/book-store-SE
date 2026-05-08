@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Box,
   Grid,
@@ -25,8 +26,9 @@ import {
 } from 'recharts';
 
 import { useFetch } from '../../../../../Hooks/useFetch';
-import { GetAllUsers, GetAllOrders, GetStatistics, GetOrdersChartData, GetLoginStats } from '../../../../../Api/modules/admins';
+import { GetAllOrders, GetStatistics, GetOrdersChartData, GetLoginStats } from '../../../../../Api/modules/admins';
 import { GetBooks } from '../../../../../Api/modules/books';
+import { GetAllUsers } from '../../../../../Api/modules/users';
 
 export default function AdminHome() {
   const authContext = useContext(AuthContext);
@@ -40,7 +42,7 @@ export default function AdminHome() {
 
   // ✅ جرب تجيب الـ statistics العادية برضو (ممكن تشتغل لو الـ backend اتصلح)
   const { data: statsData } = useFetch(GetStatistics);
-  const { data: chartData, loading: chartLoading } = useFetch(GetOrdersChartData);
+  const { loading: chartLoading } = useFetch(GetOrdersChartData);
   const { data: loginStatsData, loading: loginsLoading } = useFetch(GetLoginStats);
 
   // ✅ احسب الـ stats من الـ data الموجودة لو الـ /admin/statistics فاشل
@@ -232,7 +234,7 @@ export default function AdminHome() {
                     outerRadius={100}
                     dataKey="value"
                     labelLine={true}
-                    label={({ name, percent, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                    label={({ name, percent = 0, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%`: ''}
                   >
                     {pieData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />

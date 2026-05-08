@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
 import {
   Box,
   Typography,
@@ -36,6 +35,7 @@ interface OrderItem {
 
 interface User {
   firstName: string;
+  lastName: string;
   email: string;
 }
 
@@ -43,7 +43,7 @@ interface Order {
   id: number;
   user: User;
   date: string;
-  status: 'pending' | 'shipped' | 'delivered' | 'canceled';
+  status: 'pending' | 'shipped';
   total: number;
   orderItems: OrderItem[];
 }
@@ -99,7 +99,7 @@ export default function AdminOrders() {
               <TableRow key={order.id} hover sx={{ '&:last-child td': { border: 0 } }}>
                 <TableCell>
                   <Box>
-                    <Typography variant="body2" fontWeight={600}> {order.user?.firstName}</Typography>
+                    <Typography variant="body2" fontWeight={600}> {order.user?.firstName} {order.user?.lastName}</Typography>
                     <Typography variant="caption" color="text.secondary">{order.user?.email}</Typography>
                   </Box>
                 </TableCell>
