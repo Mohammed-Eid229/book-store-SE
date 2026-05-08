@@ -3,7 +3,7 @@ import { Stack, Pagination, PaginationItem } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-interface PaginationProps {
+interface BooksPaginationProps {
   page: number;
   setPage: (value: number) => void;
   pageCount: number;
@@ -13,7 +13,7 @@ export default function BooksPagination({
   page,
   setPage,
   pageCount,
-}:PaginationProps) {
+}:BooksPaginationProps) {
   return (
     <Stack direction="row" justifyContent="center" mt={8}>
               <Pagination 

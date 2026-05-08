@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Box, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton, Typography, Paper, CircularProgress } from "@mui/material";
 import { useFetch } from "../../../../../Hooks/useFetch";
@@ -399,7 +401,7 @@ export default function AdminBooks() {
 
         <Grid size={{ xs: 12 }}>
           <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-            <BooksPagination count={books.pageCount} page={books.page} onChange={books.setPage} />
+            <BooksPagination pageCount={books.pageCount} page={books.page} setPage={books.setPage} />
           </Box>
         </Grid>
       </Grid>

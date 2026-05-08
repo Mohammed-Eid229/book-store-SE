@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import BreadCrumbs from "../../../../Shared/Components/BreadCrumbs/BreadCrumbs";
 import { Box, Grid } from "@mui/material";
@@ -11,16 +10,7 @@ import { FavAPI } from "../../../../../Api";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../../../../Contexts/AuthContext";
 
-// interface Book {
-//   id: number;
-//   title: string;
-//   category: string;
-//   author: string;
-//   price: number;
-//   image: string;
-//   status: string;
-//   description: string;
-// }
+
 
 export default function WhisList() {
 
