@@ -30,6 +30,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { AuthContext } from '../../../../Contexts/AuthContext';
+import { UpdateUserProfile } from '../../../../Api/modules/admins';
+import { AuthAPI } from '../../../../Api';
+import axiosClient from '../../../../Api/axiosClient';
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 interface ProfileFormValues {
@@ -80,7 +83,6 @@ interface UserProfileData {
   lastName: string;
   email: string;
   phone: string;
-  age: string;
   img: string;
   role: string;
 }
@@ -100,15 +102,15 @@ const OrderRow = ({ order }: { order: Order }) => (
     </TableCell>
     <TableCell sx={{ color: '#777' }}>{order.date}</TableCell>
     <TableCell>
-      <Chip 
-        label={order.status} 
-        size="small" 
-        sx={{ 
+      <Chip
+        label={order.status}
+        size="small"
+        sx={{
           bgcolor: order.status === 'Delivered' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(241, 196, 15, 0.1)',
           color: order.status === 'Delivered' ? '#27ae60' : '#f39c12',
           fontWeight: 700,
           borderRadius: '6px'
-        }} 
+        }}
       />
     </TableCell>
     <TableCell align="right" sx={{ fontWeight: 700, color: '#393280' }}>
@@ -142,59 +144,70 @@ export default function Profile() {
   const [editOpen, setEditOpen] = useState(false);
   const [resetPassOpen, setResetPassOpen] = useState(false);
   const [profileImg, setProfileImg] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isInsideAdmin = location.pathname.includes('/admin');
-  const isCustomer = userData?.role?.toLowerCase() === 'customer' || 
-                    userData?.role?.toLowerCase() === 'user' ||
-                    location.pathname.includes('/dashboard/');
+  const isCustomer = userData?.role?.toLowerCase() === 'customer' ||
+    userData?.role?.toLowerCase() === 'user' ||
+    location.pathname.includes('/dashboard/');
+
+  // ✅ جيب بيانات اليوزر من الـ API مش بس من الـ JWT
+  const fetchUserFromAPI = async (userId: number) => {
+    try {
+      const res = await axiosClient.get(`/users/${userId}`);
+      const u = res.data;
+      setProfileData({
+        firstName: u.firstName || '',
+        lastName: u.lastName || '',
+        email: u.email || '',
+        phone: u.phoneNumber || '',
+        img: u.image || u.img || '',
+        role: u.role || (isInsideAdmin ? 'Admin' : 'User'),
+      });
+      if (u.image || u.img) {
+        setProfileImg(u.image || u.img);
+      }
+    } catch {
+      // لو الـ API فشل، استخدم بيانات الـ JWT
+      loadFromJWT();
+    }
+  };
+
+  const loadFromJWT = () => {
+    const detectedRole = userData?.role || (isInsideAdmin ? 'Admin' : 'User');
+    const firstName = userData?.firstName || userData?.name?.split(' ')[0] || '';
+    const lastName = userData?.lastName || userData?.name?.split(' ').slice(1).join(' ') || '';
+    const email = userData?.sub || userData?.email || '';
+    const phone = userData?.phoneNumber || '';
+    const img = userData?.image || '';
+
+    setProfileData({ firstName, lastName, email, phone, img, role: detectedRole });
+    if (img) setProfileImg(img);
+  };
 
   useEffect(() => {
-    const detectedRole = userData?.role || (isInsideAdmin ? 'Admin' : 'User');
-    
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setProfileData({
-      firstName: userData?.name?.split(' ')[0] || (isInsideAdmin ? 'Admin' : 'User'),
-      lastName: userData?.name?.split(' ')[1] || (isInsideAdmin ? '' : 'Name'),
-      email: userData?.email || (isInsideAdmin ? 'admin@bookstore.com' : 'user@example.com'),
-      phone: '+20 100-123-4567',
-      age: '30',
-      img: '',
-      role: detectedRole
-    });
-
-    if (isCustomer) {
-      setOrders([
-        {
-          id: 6,
-          userId: 1,
-          date: '2026-04-30',
-          status: 'pending',
-          total: 1440.00,
-          orderItems: [
-            {
-              id: 11,
-              book: {
-                id: 2,
-                title: "The Long",
-                author: "Steven",
-                description: null,
-                categoryName: "Action",
-                image: null,
-                price: 400.00,
-                quantity: 82,
-                status: "available",
-                date: "2026-04-30"
-              },
-              quantity: 3,
-              price: 400.00,
-              subtotal: 1200.00
-            }
-          ]
-        }
-      ]);
+    const userId = userData?.id || userData?.userId;
+    if (userId) {
+      fetchUserFromAPI(Number(userId));
+    } else {
+      loadFromJWT();
     }
-  }, [userData, isCustomer, isInsideAdmin]);
+
+    // Orders للـ customer
+    if (isCustomer) {
+      const custId = userData?.id || userData?.userId;
+      if (custId) {
+        axiosClient.get(`/orders/user/${custId}`)
+          .then(res => {
+            const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+            setOrders(list);
+          })
+          .catch(() => setOrders([]));
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData]);
 
   const { register: profileReg, handleSubmit: handleProfileSubmit, reset: resetProfile } = useForm<ProfileFormValues>();
   const { register: passReg, handleSubmit: handlePassSubmit, reset: resetPass } = useForm<PasswordFormValues>();
@@ -207,40 +220,68 @@ export default function Profile() {
         email: profileData.email,
         phone: profileData.phone,
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setProfileImg(profileData.img || null);
     }
   }, [profileData, resetProfile]);
 
-  const onProfileSave = async (data: ProfileFormValues) => {
+  const handleProfileUpdate = async (data: ProfileFormValues) => {
     try {
-      setProfileData(prev => prev ? { ...prev, ...data, img: profileImg || '' } : null);
-      toast.success('Profile updated successfully!');
-      setEditOpen(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      toast.error('Failed to update profile');
+      const formData = new FormData();
+      formData.append('firstName', data.firstName);
+      formData.append('lastName', data.lastName);
+      formData.append('phoneNumber', data.phone);
+      // لو في صورة جديدة اضيفها
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
+
+      const userId = userData?.id || userData?.userId;
+      if (userId) {
+        await UpdateUserProfile(Number(userId), formData);
+
+        // ✅ حدّث الـ state علطول عشان الـ UI يتغير فوراً
+        setProfileData(prev => prev ? {
+          ...prev,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+        } : prev);
+
+        toast.success('Profile updated successfully!');
+        setEditOpen(false);
+        setSelectedFile(null);
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || error.response?.data?.error || 'Failed to update profile';
+      toast.error(msg);
     }
   };
 
-  const onPasswordReset = async (data: PasswordFormValues) => {
-    if (data.newPassword !== data.confirmPassword) {
-      toast.error('Passwords do not match!');
-      return;
-    }
+  const handlePasswordChange = async (data: PasswordFormValues) => {
     try {
-      toast.success('Password reset successfully!');
-      resetPass();
-      setResetPassOpen(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      toast.error('Failed to reset password');
+      if (data.newPassword !== data.confirmPassword) {
+        toast.error('Passwords do not match!');
+        return;
+      }
+      const userId = userData?.id || userData?.userId;
+      if (userId) {
+        await AuthAPI.ChangePassword(Number(userId), {
+          oldPassword: data.oldPassword,
+          newPassword: data.newPassword
+        });
+        toast.success('Password changed successfully!');
+        setResetPassOpen(false);
+        resetPass();
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || error.response?.data?.error || 'Failed to change password';
+      toast.error(msg);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => setProfileImg(reader.result as string);
       reader.readAsDataURL(file);
@@ -275,29 +316,36 @@ export default function Profile() {
               <Typography variant="h4" fontWeight={700} color="#393280" gutterBottom>
                 {profileData ? `${profileData.firstName} ${profileData.lastName}` : (userData?.name || 'User Name')}
               </Typography>
-              <Chip label={profileData?.role?.toUpperCase() || userData?.role?.toUpperCase() || 'USER'} sx={{ bgcolor: '#393280', color: '#fff', fontWeight: 600 }} />
+              <Chip label={profileData?.role?.toUpperCase() || 'USER'} sx={{ bgcolor: '#393280', color: '#fff', fontWeight: 600 }} />
             </Box>
 
             <Stack direction="row" spacing={2}>
-              <Button variant="outlined" startIcon={<LockResetIcon />} onClick={() => setResetPassOpen(true)} sx={{ color: '#393280', borderColor: '#393280' }}>Change Password</Button>
-              <Button variant="contained" startIcon={<EditIcon />} onClick={() => setEditOpen(true)} sx={{ bgcolor: '#ED553B' }}>Edit Profile</Button>
+              <Button variant="outlined" startIcon={<LockResetIcon />} onClick={() => setResetPassOpen(true)} sx={{ color: '#393280', borderColor: '#393280' }}>
+                Change Password
+              </Button>
+              <Button variant="contained" startIcon={<EditIcon />} onClick={() => setEditOpen(true)} sx={{ bgcolor: '#ED553B', '&:hover': { bgcolor: '#d94a2f' } }}>
+                Edit Profile
+              </Button>
             </Stack>
           </Stack>
 
           {/* Info Section */}
-          <Typography variant="h6" fontWeight={700} color="#393280" mb={3} borderBottom="2px solid #f0f0f0" pb={1}>Personal Information</Typography>
-          <Grid container spacing={4}>
-            <InfoItem label="Full Name" value={`${profileData?.firstName} ${profileData?.lastName}`} />
+          <Typography variant="h6" fontWeight={700} color="#393280" mb={3} borderBottom="2px solid #f0f0f0" pb={1}>
+            Personal Information
+          </Typography>
+          <Grid container spacing={3} sx={{ mt: 2 }}>
+            <InfoItem label="Full Name" value={`${profileData?.firstName || ''} ${profileData?.lastName || ''}`} />
             <InfoItem label="Email Address" value={profileData?.email || ''} />
-            <InfoItem label="Phone Number" value={profileData?.phone || ''} />
-            <InfoItem label="Age" value={`${profileData?.age} Years`} />
+            <InfoItem label="Phone Number" value={profileData?.phone || 'Not set'} />
           </Grid>
         </Paper>
 
         {/* Orders Section */}
-        {isCustomer && (
+        {isCustomer && orders.length > 0 && (
           <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, border: '1px solid #eee' }}>
-            <Typography variant="h6" fontWeight={700} color="#393280" mb={3} borderBottom="2px solid #f0f0f0" pb={1}>Recent Orders</Typography>
+            <Typography variant="h6" fontWeight={700} color="#393280" mb={3} borderBottom="2px solid #f0f0f0" pb={1}>
+              Recent Orders
+            </Typography>
             <TableContainer>
               <Table>
                 <TableHead>
@@ -317,7 +365,7 @@ export default function Profile() {
         )}
       </Container>
 
-      {/* Dialogs */}
+      {/* Edit Profile Dialog */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ borderBottom: '1px solid #eee', px: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight={700}>Edit Profile Information</Typography>
@@ -326,23 +374,59 @@ export default function Profile() {
         <DialogContent sx={{ p: 3, mt: 1 }}>
           <Stack spacing={3}>
             <Box sx={{ textAlign: 'center', mb: 2 }}>
-              <Avatar src={profileImg || ''} sx={{ width: 100, height: 100, mx: 'auto', bgcolor: '#ED553B' }}>{!profileImg && getInitials()}</Avatar>
-              <Button size="small" onClick={() => fileInputRef.current?.click()} sx={{ mt: 1 }}>Change Photo</Button>
+              <Avatar src={profileImg || ''} sx={{ width: 100, height: 100, mx: 'auto', bgcolor: '#ED553B' }}>
+                {!profileImg && getInitials()}
+              </Avatar>
+              <Button size="small" onClick={() => fileInputRef.current?.click()} sx={{ mt: 1, color: '#393280' }}>
+                Change Photo
+              </Button>
             </Box>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}><TextField label="First Name" fullWidth {...profileReg('firstName')} /></Grid>
-              <Grid size={{ xs: 12, sm: 6 }}><TextField label="Last Name" fullWidth {...profileReg('lastName')} /></Grid>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="First Name"
+                  fullWidth
+                  {...profileReg('firstName', { required: 'First name is required' })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Last Name"
+                  fullWidth
+                  {...profileReg('lastName', { required: 'Last name is required' })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Email Address"
+                  fullWidth
+                  disabled
+                  value={profileData?.email || ''}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label="Phone Number"
+                  fullWidth
+                  {...profileReg('phone', { required: 'Phone number is required' })}
+                />
+              </Grid>
             </Grid>
-            <TextField label="Email Address" fullWidth {...profileReg('email')} />
-            <TextField label="Phone Number" fullWidth {...profileReg('phone')} />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
           <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleProfileSubmit(onProfileSave)} sx={{ bgcolor: '#393280' }}>Save Changes</Button>
+          <Button
+            variant="contained"
+            onClick={handleProfileSubmit(handleProfileUpdate)}
+            sx={{ bgcolor: '#393280', '&:hover': { bgcolor: '#2a2560' } }}
+          >
+            Save Changes
+          </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Change Password Dialog */}
       <Dialog open={resetPassOpen} onClose={() => setResetPassOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ borderBottom: '1px solid #eee', px: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight={700}>Reset Password</Typography>
@@ -357,7 +441,13 @@ export default function Profile() {
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
           <Button onClick={() => setResetPassOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handlePassSubmit(onPasswordReset)} sx={{ bgcolor: '#ED553B' }}>Update Password</Button>
+          <Button
+            variant="contained"
+            onClick={handlePassSubmit(handlePasswordChange)}
+            sx={{ bgcolor: '#ED553B', '&:hover': { bgcolor: '#d94a2f' } }}
+          >
+            Update Password
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -38,6 +38,7 @@ function CategoryDialog({
   useEffect(() => {
     if (open) {
       reset({ name: initialData?.name || "" });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreview(initialData?.image || null);
     }
   }, [open, initialData, reset]);

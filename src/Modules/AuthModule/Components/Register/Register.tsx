@@ -35,7 +35,8 @@ export default function Register() {
       toast.success("User Created Successfully!");
       navigate('/login')
     } catch (error:any) {
-      toast.error(error.response?.data?.error)
+      const msg = error.response?.data?.message || error.response?.data?.error || "Registration failed!";
+      toast.error(msg)
     }
   };
 

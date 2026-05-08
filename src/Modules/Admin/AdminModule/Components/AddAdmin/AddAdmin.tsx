@@ -59,6 +59,7 @@ export default function AdminForm({ open, onClose, onSubmitAction, initialData, 
         phone: '',
         password: '',
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreview(initialData?.img || null);
     }
   }, [open, initialData, reset]);

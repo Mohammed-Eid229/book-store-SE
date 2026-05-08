@@ -18,6 +18,8 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AuthAPI } from "../../../../Api";
+import { useContext } from "react";
+import { AuthContext } from "../../../../Contexts/AuthContext";
 
 const SIDEBAR_BG   = "#393280";
 const ACTIVE_COLOR = "#ED553B";
@@ -38,6 +40,8 @@ export default function AdminSideBar() {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [collapsed, setCollapsed] = useState(false);
+  const authContext = useContext(AuthContext);
+  const userData = authContext?.userData;
 
   // Automatically collapse sidebar on small screens
   useEffect(() => {
@@ -65,6 +69,9 @@ export default function AdminSideBar() {
       toast.error(errorMessage);
     }
   }
+
+  const adminName = userData?.name || (userData?.firstName ? `${userData.firstName} ${userData.lastName || ''}` : "Admin");
+  const adminInitials = userData?.firstName ? userData.firstName.charAt(0).toUpperCase() : (userData?.name?.charAt(0).toUpperCase() || "A");
 
   return (
     <Box sx={{ height: "100vh", position: "sticky", top: 0, display: "flex", flexDirection: "column", flexShrink: 0 }}>
@@ -94,11 +101,11 @@ export default function AdminSideBar() {
         {/* Admin Avatar */}
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2.5, bgcolor: "#393280", mb: 1 }}>
           <Avatar sx={{ bgcolor: ACTIVE_COLOR, width: collapsed ? 36 : 52, height: collapsed ? 36 : 52, fontSize: collapsed ? 16 : 22, fontWeight: 700, mb: collapsed ? 0 : 1, transition: "all 0.3s" }}>
-            A
+            {adminInitials}
           </Avatar>
           {!collapsed && (
             <>
-              <Typography variant="body2" color="#fff" fontWeight={700}>Admin</Typography>
+              <Typography variant="body2" color="#fff" fontWeight={700}>{adminName}</Typography>
               <Typography variant="caption" color={ACTIVE_COLOR}>Administrator</Typography>
             </>
           )}

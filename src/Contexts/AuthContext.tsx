@@ -6,9 +6,16 @@ import { createContext, useEffect, useState, type ReactNode } from "react";
 
 interface User{
     id: string;
-    name: string;
-    email: string;
+    userId?: string;
+    sub: string; 
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
     role: string;
+    phoneNumber?: string;
+    age?: string;
+    image?: string;
 }
 
 interface AuthContextInterface{
