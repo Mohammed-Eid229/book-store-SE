@@ -6,6 +6,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import '../../../../../../node_modules/swiper/swiper-bundle.css';
 import { CategoriesAPI } from "../../../../../Api";
 import { useFetch } from "../../../../../Hooks/useFetch";
+import { useNavigate } from "react-router-dom";
 
 interface Category {
   id: number;
@@ -14,6 +15,7 @@ interface Category {
 }
 
 export default function HomeCateg() {
+  const navigate = useNavigate();
 
     const { data: categories, loading } = useFetch<Category[]>(
       () => CategoriesAPI.GetCategories()
@@ -107,7 +109,8 @@ export default function HomeCateg() {
         </Box>
         <Box textAlign='center' my={4}>
           <Button variant='outlined' 
-            sx={{color:'#393280' , borderColor: '#393280',px:3, py:1.5 , fontWeight:'normal'}} 
+            sx={{color:'#393280' , borderColor: '#393280',px:3, py:1.5 , fontWeight:'normal'}}
+            onClick={()=>navigate('/dashboard/books')} 
             endIcon={<ArrowForwardIcon />}>
               view more
           </Button>

@@ -171,21 +171,6 @@ function BookDialog({
             <TextField label="Quantity" placeholder="Enter Quantity" type="number" fullWidth error={!!errors.quantity} helperText={errors.quantity?.message} {...register("quantity", { required: "Quantity is required" })} />
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              label="Status"
-              select
-              SelectProps={{ native: true }}
-              fullWidth
-              error={!!errors.status}
-              helperText={errors.status?.message}
-              {...register("status", { required: "Status is required" })}
-            >
-              <option value="available">Available</option>
-              <option value="unavailable">Unavailable</option>
-            </TextField>
-          </Grid>
-
           <Grid size={{ xs: 12 }}>
             <TextField label="Description" placeholder="Enter Description" multiline rows={3} fullWidth error={!!errors.description} helperText={errors.description?.message} {...register("description")} />
           </Grid>
@@ -268,7 +253,7 @@ export default function AdminBooks() {
       refresh();
       setAddOpen(false);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create book");
+      toast.error(err.response?.data?.error || "Failed to create book");
     }
   };
 
@@ -281,7 +266,7 @@ export default function AdminBooks() {
       setEditOpen(false);
       setSelectedBook(null);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to update book");
+      toast.error(err.response?.data?.error || "Failed to update book");
     }
   };
 
@@ -294,7 +279,7 @@ export default function AdminBooks() {
       setDeleteOpen(false);
       setSelectedBook(null);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete book");
+      toast.error(err.response?.data?.error || "Failed to delete book");
     }
   };
 

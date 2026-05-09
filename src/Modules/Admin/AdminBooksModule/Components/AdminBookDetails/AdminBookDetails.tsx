@@ -33,24 +33,6 @@ export interface Book {
   description?: string;
 }
 
-// ✅ normalize book (Matches AdminBooks.tsx)
-const normalizeBook = (b: any): Book => {
-  const baseUrl = "https://upskilling-egypt.com:3007/";
-  const imgPath = b.img || b.image || b.imagePath || "";
-  
-  const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-  const cleanPath = imgPath.startsWith("/") ? imgPath.slice(1) : imgPath;
-  const fullImg = imgPath ? (imgPath.startsWith("http") ? imgPath : `${cleanBase}/${cleanPath}`) : "";
-  
-  return {
-    ...b,
-    img: fullImg,
-    image: fullImg,
-    category: b.category || b.categoryName || "",
-    categoryName: b.category || b.categoryName || "",
-  };
-};
-
 interface BookForm {
   title: string;
   author: string;
@@ -153,19 +135,6 @@ function BookEditDialog({ open, onClose, onSubmitAction, initialData }: {
 
           <Grid size={{ xs: 12, md: 6 }}><TextField label="Price" type="number" fullWidth {...register("price", { required: "Price is required" })} /></Grid>
           <Grid size={{ xs: 12, md: 6 }}><TextField label="Quantity" type="number" fullWidth {...register("quantity", { required: "Quantity is required" })} /></Grid>
-          
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              label="Status"
-              select
-              SelectProps={{ native: true }}
-              fullWidth
-              {...register("status", { required: "Status is required" })}
-            >
-              <option value="available">Available</option>
-              <option value="unavailable">Unavailable</option>
-            </TextField>
-          </Grid>
 
           <Grid size={{ xs: 12 }}>
             <TextField label="Description" multiline rows={3} fullWidth {...register("description")} />
@@ -220,10 +189,8 @@ export default function AdminBookDetails() {
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
 
-    const { data: bookRaw, loading, refresh } = useFetch(() => GetBookById(bookId), [bookId]);
+    const { data: bookData, loading, refresh } = useFetch(() => GetBookById(bookId), [bookId]);
     
-    const bookData: Book | null = bookRaw ? normalizeBook(bookRaw) : null;
-
   if (loading) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
       <CircularProgress sx={{ color: '#ED553B' }} />
@@ -293,7 +260,7 @@ export default function AdminBookDetails() {
               >
                 <Box
                   component="img"
-                  src={bookData.img}
+                  src={`/api/images/books/${bookData.image}`}
                   alt={bookData.title}
                   sx={{
                     width: "100%",
@@ -353,7 +320,7 @@ export default function AdminBookDetails() {
                 </Typography>
 
                 <Typography variant="h6" color="#ED553B" mt={3}>
-                  $ {Number(bookData.price).toFixed(2)}
+                  {Number(bookData.price).toFixed(2)} EGP
                 </Typography>
 
                 <Typography variant="body1" color="#393280" mt={2} fontWeight="600">

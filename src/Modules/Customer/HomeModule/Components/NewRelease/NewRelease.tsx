@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from 'swiper/modules';
@@ -6,7 +7,9 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from "react-router-dom";
 import BookCard from "../../../BookModule/Components/BooksCard/BooksCard";
 import { useFetch } from "../../../../../Hooks/useFetch";
-import { BooksAPI } from "../../../../../Api";
+import { BooksAPI, FavAPI } from "../../../../../Api";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../../../../../Contexts/AuthContext";
 
 interface Book {
   id: number;
@@ -24,6 +27,32 @@ export default function NewRelease() {
     const { data: books, loading } = useFetch<Book[]>(
           () => BooksAPI.GetBooks()
     );
+
+     const {userData}:any = useContext(AuthContext);
+      const [favBooks , setFavBooks] = useState<Book[]>([]);
+    
+      
+      useEffect(() => {
+        const getMyFav = async () => {
+          const id = userData?.userId;
+    
+          if (!id) return;
+    
+          try {
+            const response = await FavAPI.GetFavourites(id);
+    
+            const extractedBooks = (response?.data || []).map(
+              (item: any) => item.book
+            );
+    
+            setFavBooks(extractedBooks);
+          } catch (error) {
+            console.log(error);
+          }
+        };
+    
+        getMyFav();
+      }, [userData?.userId]);
 
   return (
     <>
@@ -60,7 +89,7 @@ export default function NewRelease() {
                 >
                 {books?.slice(0, 10).map((book) => (
                     <SwiperSlide key={book.id}>
-                        <BookCard book={book} view={'grid'} />
+                        <BookCard book={book} view={'grid'} favBooks={favBooks} setFavBooks={setFavBooks}/>
                     </SwiperSlide>
                 ))}
                     <Box flex={1} height="1px" bgcolor="#E0E0E0" mt={4} mb={6}/>

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useRef, useEffect } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
@@ -120,7 +122,7 @@ export default function AdminCategories() {
       refresh();
       setAddOpen(false);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to create category');
+      toast.error(err.response?.data?.error || 'Failed to create category');
     }
   };
 
@@ -133,7 +135,7 @@ export default function AdminCategories() {
         setEditOpen(false);
         setSelectedCategory(null);
       } catch (err: any) {
-        toast.error(err.response?.data?.message || 'Failed to update category');
+        toast.error(err.response?.data?.error || 'Failed to update category');
       }
     }
   };
@@ -147,7 +149,7 @@ export default function AdminCategories() {
         setDeleteOpen(false);
         setSelectedCategory(null);
       } catch (err: any) {
-        toast.error(err.response?.data?.message || 'Failed to delete category');
+        toast.error(err.response?.data?.error || 'Failed to delete category');
       }
     }
   };
@@ -171,7 +173,7 @@ export default function AdminCategories() {
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: '#F4F6F8' }}>
-              {['#', 'Category Name', 'Books Count', 'Actions'].map((col) => (
+              {['#', 'Category Image','Category Name', 'Books Count', 'Actions'].map((col) => (
                 <TableCell key={col} sx={{ fontWeight: 700, color: '#2C3E50', fontSize: 13 }}>
                   {col}
                 </TableCell>
@@ -189,6 +191,20 @@ export default function AdminCategories() {
               categories.map((cat: any, index: number) => (
                 <TableRow key={cat.id} hover sx={{ '&:last-child td': { border: 0 } }}>
                   <TableCell sx={{ fontSize: 13, color: '#555' }}>{index + 1}</TableCell>
+                  <TableCell>
+  <Box
+    component="img"
+    src={`/api/images/categories/${cat.image}`}
+    alt={cat.name}
+    sx={{
+      width: 50,
+      height: 50,
+      objectFit: 'cover',
+      borderRadius: 2,
+      border: '1px solid #eee',
+    }}
+  />
+</TableCell>
                   <TableCell sx={{ fontSize: 13, fontWeight: 500, textTransform: 'capitalize' }}>{cat.name}</TableCell>
                   <TableCell sx={{ fontSize: 13, color: '#888' }}>{cat.bookCount ?? 0} Books</TableCell>
                   <TableCell>

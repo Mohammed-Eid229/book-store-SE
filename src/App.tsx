@@ -48,7 +48,7 @@ function App() {
     },
     {
       path: 'dashboard',
-      element: <ProtectedRoutes><MasterLayout/></ProtectedRoutes>,
+      element: <ProtectedRoutes allowedRoles={['user']}><MasterLayout/></ProtectedRoutes>,
       errorElement: <NotFound/>,
       children: [
         {index: true , element: <Home/>},
@@ -75,7 +75,7 @@ function App() {
     // ── Admin Routes ──────────────────────────────────────────────────────
     {
       path: 'admin',
-      element: <ProtectedRoutes><AdminLayout /></ProtectedRoutes>,
+      element: <ProtectedRoutes allowedRoles={['admin']}><AdminLayout /></ProtectedRoutes>,
       errorElement: <NotFound />,
       children: [
         { index: true, element: <AdminHome /> },

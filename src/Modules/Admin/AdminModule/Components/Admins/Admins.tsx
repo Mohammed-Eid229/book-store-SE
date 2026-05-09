@@ -96,7 +96,7 @@ export default function Admins() {
       loadAdmins();
       setDialogOpen(false);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to create admin');
+      toast.error(err.response?.data?.error || 'Failed to create admin');
     }
   };
 

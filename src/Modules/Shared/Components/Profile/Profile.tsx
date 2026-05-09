@@ -24,7 +24,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import EditIcon from '@mui/icons-material/Edit';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import CloseIcon from '@mui/icons-material/Close';
@@ -106,8 +105,8 @@ const OrderRow = ({ order }: { order: Order }) => (
         label={order.status}
         size="small"
         sx={{
-          bgcolor: order.status === 'Delivered' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(241, 196, 15, 0.1)',
-          color: order.status === 'Delivered' ? '#27ae60' : '#f39c12',
+          bgcolor: order.status === 'shipped' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(241, 196, 15, 0.1)',
+          color: order.status === 'shipped' ? '#27ae60' : '#f39c12',
           fontWeight: 700,
           borderRadius: '6px'
         }}
@@ -135,9 +134,8 @@ const InfoItem = ({ label, value }: { label: string; value: string }) => (
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function Profile() {
-  const authContext = useContext(AuthContext);
   const location = useLocation();
-  const userData = authContext?.userData;
+  const {userData , setUserData}:any = useContext(AuthContext);
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -152,7 +150,6 @@ export default function Profile() {
     userData?.role?.toLowerCase() === 'user' ||
     location.pathname.includes('/dashboard/');
 
-  // ✅ جيب بيانات اليوزر من الـ API مش بس من الـ JWT
   const fetchUserFromAPI = async (userId: number) => {
     try {
       const res = await axiosClient.get(`/users/${userId}`);
@@ -169,7 +166,6 @@ export default function Profile() {
         setProfileImg(u.image || u.img);
       }
     } catch {
-      // لو الـ API فشل، استخدم بيانات الـ JWT
       loadFromJWT();
     }
   };
@@ -194,7 +190,6 @@ export default function Profile() {
       loadFromJWT();
     }
 
-    // Orders للـ customer
     if (isCustomer) {
       const custId = userData?.id || userData?.userId;
       if (custId) {
@@ -230,14 +225,17 @@ export default function Profile() {
       formData.append('firstName', data.firstName);
       formData.append('lastName', data.lastName);
       formData.append('phoneNumber', data.phone);
-      // لو في صورة جديدة اضيفها
       if (selectedFile) {
         formData.append('file', selectedFile);
       }
 
       const userId = userData?.id || userData?.userId;
       if (userId) {
-        await UpdateUserProfile(Number(userId), formData);
+        const response = await UpdateUserProfile(Number(userId), formData);
+        setUserData({
+          ...response?.data,
+          imageVersion: Date.now(),
+        });
 
         setProfileData(prev => prev ? {
           ...prev,
@@ -245,6 +243,7 @@ export default function Profile() {
           lastName: data.lastName,
           phone: data.phone,
         } : prev);
+
 
         toast.success('Profile updated successfully!');
         setEditOpen(false);
@@ -316,9 +315,6 @@ export default function Profile() {
               <Avatar src={`/api/images/users/${profileImg}`} sx={{ width: 160, height: 160, bgcolor: '#ED553B', fontSize: 48, fontWeight: 700, border: '6px solid #fff', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
                 {!profileImg && getInitials()}
               </Avatar>
-              <IconButton onClick={() => fileInputRef.current?.click()} sx={{ position: 'absolute', bottom: 8, right: 8, bgcolor: '#393280', color: '#fff', '&:hover': { bgcolor: '#2a2560' }, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', width: 40, height: 40 }}>
-                <PhotoCameraIcon fontSize="small" />
-              </IconButton>
               <input type="file" hidden ref={fileInputRef} onChange={handleFileChange} accept="image/*" />
             </Box>
 

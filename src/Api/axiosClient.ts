@@ -26,21 +26,10 @@ axiosClient.interceptors.response.use(
     (error) => {
         if (error.response) {
             if (error.response?.status === 401 && window.location.pathname !== "/login") { //avoid infinite redirect loop
-                localStorage.removeItem("token");
+                localStorage.removeItem("userToken");
                 window.location.href = "/login";
             }
         }
-        return Promise.reject(error);
-    }
-);
-
-axiosClient.interceptors.response.use(
-    (response) => {
-        console.log(`API Response [${response.config.url}]:`, response.data);
-        return response;
-    },
-    (error) => {
-        console.error(`API Error [${error.config?.url}]:`, error.response?.data || error.message);
         return Promise.reject(error);
     }
 );

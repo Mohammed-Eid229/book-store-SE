@@ -17,23 +17,26 @@ export default function WhisList() {
   const [favBooks , setFavBooks] = useState([]);
 
   
-  useEffect(()=>{
+  useEffect(() => {
     const getMyFav = async () => {
-      const id = userData?.userId; 
+      const id = userData?.userId;
+
       if (!id) return;
 
       try {
-        const response = await FavAPI.GetFavourites(id); 
-        const extractedBooks = response?.data.map((item: any) => item.book);
-        
-        setFavBooks(extractedBooks); 
+        const response = await FavAPI.GetFavourites(id);
+
+        const extractedBooks = (response?.data || []).map(
+          (item: any) => item.book
+        );
+
+        setFavBooks(extractedBooks);
       } catch (error) {
         console.log(error);
       }
     };
-    getMyFav()
-  
-  },[userData , favBooks])
+    getMyFav();
+  }, [userData?.userId , favBooks]);
   
 
     const books = useBooks(favBooks ?? [] , "favoritesBooksSettings");

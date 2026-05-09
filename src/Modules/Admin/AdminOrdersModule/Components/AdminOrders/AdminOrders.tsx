@@ -107,7 +107,7 @@ export default function AdminOrders() {
                   <Stack spacing={0.5}>
                     {order.orderItems?.map((item: any) => (
                       <Typography key={item.id}>
-                        {item.book?.title}
+                        {item.book?.title} (x{item?.quantity})
                       </Typography>
                     ))}
                     </Stack>

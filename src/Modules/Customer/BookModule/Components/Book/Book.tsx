@@ -1,18 +1,18 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box, Button, Grid, Paper, Typography } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useContext} from "react";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { AuthContext } from "../../../../../Contexts/AuthContext";
-import { FavAPI } from "../../../../../Api";
+import { CartAPI, FavAPI } from "../../../../../Api";
 import { toast } from "react-toastify";
 import type { AxiosError } from "axios";
+import { useDispatch } from "react-redux";
+import { incrementCart } from "../../../../../redux/cartSlice";
 
-interface BookProps {
-  book: {
+interface Book{
     id: number;
     title: string;
     category: string;
@@ -22,71 +22,65 @@ interface BookProps {
     image: string;
     status: string;
     quantity?: number;
-  };
+}
+interface BookProps {
+  book: Book
   mode?: "featured" | "details";
+  favBooks: Book[];
+  setFavBooks: React.Dispatch<React.SetStateAction<Book[]>>
 }
 
-
-
-export default function Book({ book, mode = "featured" }: BookProps) {
+export default function Book({ book, mode = "featured" , favBooks , setFavBooks}: BookProps) {
   const {userData}:any = useContext(AuthContext);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const isOutOfStock = book.status.toLowerCase() === "out of stock";
-    const [isFav , setIsFav] = useState(false);
-    const [favBooks, setFavBooks] = useState<BookProps[]>([]);    
-    
-      useEffect(()=>{
-        const getMyFav = async () => {
-        const id = userData?.userId; 
-        if (!id) return;
-        try {
-          const response = await FavAPI.GetFavourites(id); 
-          const extractedBooks = response?.data.map((item: any) => item.book);
-          
-          setFavBooks(extractedBooks); 
-        } catch (error) {
-          console.log(error);
-        }
-      };
-  
-      getMyFav()
-      },[userData])
-  
-      useEffect(() => {
-        const exists = favBooks.some((favBook: any) => favBook.id === book.id);
-        setIsFav(exists);
-      }, [favBooks, book.id]);
-  
-    const addToFav = async(userId:number , bookId:number)=>{
-      try {
-        const response = await FavAPI.AddToFavourites( userId , bookId);
-        toast.success(`${response?.data?.book?.title} is Added To Favourites!`)
-        toggleFav();
-      } catch (error) {
-          const err = error as AxiosError<any>;
-          toast.error(
-            err.response?.data?.error || "Something went wrong"
-          );
-      }
-    }
-  
-    const removeFav = async(userId:number , bookId:number)=>{
-      try {
-        await FavAPI.RemoveFromFavourites( userId , bookId);
-        toast.success("Removed From Favourites!")
-        toggleFav();
-      } catch (error) {
-          const err = error as AxiosError<any>;
-          toast.error(
-            err.response?.data?.error || "Something went wrong"
-          );
-      }
-    }
-  
-    const toggleFav = () => {
-      setIsFav((prev) => !prev);
-    };
+    const isFav = favBooks?.some(
+  (favBook: any) => favBook.id === book.id
+);
 
+  const addToFav = async (userId?: number, bookId?: number) => {
+  if (!userId || !bookId) return;
+
+  try {
+    const response = await FavAPI.AddToFavourites(userId, bookId);
+    toast.success(`${response?.data?.book?.title} is Added To Favourites!`);
+    setFavBooks((prev) => [...prev, book]);
+  } catch (error) {
+    const err = error as AxiosError<any>;
+    toast.error(err.response?.data?.error || "Something went wrong");
+  }
+};
+
+  const removeFav = async(userId:number , bookId:number)=>{
+    try {
+      await FavAPI.RemoveFromFavourites( userId , bookId);
+      toast.success("Removed From Favourites!")
+      setFavBooks((prev) =>
+        prev.filter((favBook) => favBook.id !== book.id)
+      );
+    } catch (error) {
+        const err = error as AxiosError<any>;
+        toast.error(
+          err.response?.data?.error || "Something went wrong"
+        );
+    }
+  }
+
+
+  const addToCart = async(userId:number , data:{bookId:number , quantity:number})=>{
+      
+      try {
+        const response = await CartAPI.AddToCart(userId , data);
+        dispatch(incrementCart({bookId: book?.id , quantity:1}))
+        console.log(response)
+        toast.success("Added to Cart Successfully")
+      } catch (error) {
+        const err = error as AxiosError<any>;
+        toast.warning(
+          err.response?.data?.error ||"Something went wrong");
+      } 
+    }
   return (
     <>
       <Grid container spacing={6} alignItems="center">
@@ -177,7 +171,7 @@ export default function Book({ book, mode = "featured" }: BookProps) {
             </Typography>
 
             <Typography variant="h6" color="#ED553B" mt={3}>
-              $ {book.price.toFixed(2)}
+               {book.price.toFixed(2)} EGP
             </Typography>
 
             {mode === "details" && book.quantity !== undefined && (
@@ -226,6 +220,7 @@ export default function Book({ book, mode = "featured" }: BookProps) {
                     backgroundColor: isOutOfStock ? "#ccc" : "#d94a2f",
                   },
                 }}
+                onClick={()=>addToCart(userData?.userId , {bookId: book?.id , quantity:1})}
               >
                 {isOutOfStock ? "Unavailable" : "Add To Cart"}
               </Button>

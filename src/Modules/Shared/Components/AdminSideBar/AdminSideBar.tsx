@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
+import { Sidebar, Menu, MenuItem, menuClasses } from "react-pro-sidebar";
 import {
-  Sidebar,
-  Menu,
-  MenuItem,
-  menuClasses,
-} from "react-pro-sidebar";
-import { Box, Typography, Avatar, IconButton, Divider, useMediaQuery, useTheme } from "@mui/material";
+  Box,
+  Typography,
+  Avatar,
+  IconButton,
+  Divider,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
@@ -21,19 +24,19 @@ import { AuthAPI } from "../../../../Api";
 import { useContext } from "react";
 import { AuthContext } from "../../../../Contexts/AuthContext";
 
-const SIDEBAR_BG   = "#393280";
+const SIDEBAR_BG = "#393280";
 const ACTIVE_COLOR = "#ED553B";
-const TEXT_COLOR   = "rgba(255,255,255,0.75)";
-const HOVER_BG     = "rgba(245,166,35,0.12)";
+const TEXT_COLOR = "rgba(255,255,255,0.75)";
+const HOVER_BG = "rgba(245,166,35,0.12)";
 
 const navItems = [
-  { title: "Home",       path: "/admin/home",       icon: <HomeIcon /> },
-  { title: "Users",      path: "/admin/users",      icon: <PeopleIcon /> },
-  { title: "Admins",     path: "/admin/admins",     icon: <AdminPanelSettingsIcon /> },
-  { title: "Books",      path: "/admin/books",      icon: <MenuBookIcon /> },
+  { title: "Home", path: "/admin/home", icon: <HomeIcon /> },
+  { title: "Users", path: "/admin/users", icon: <PeopleIcon /> },
+  { title: "Admins", path: "/admin/admins", icon: <AdminPanelSettingsIcon /> },
+  { title: "Books", path: "/admin/books", icon: <MenuBookIcon /> },
   { title: "Categories", path: "/admin/categories", icon: <CategoryIcon /> },
-  { title: "Orders",     path: "/admin/orders",     icon: <ShoppingCartIcon /> },
-  { title: "Profile",    path: "/admin/profile",    icon: <PersonIcon /> },
+  { title: "Orders", path: "/admin/orders", icon: <ShoppingCartIcon /> },
+  { title: "Profile", path: "/admin/profile", icon: <PersonIcon /> },
 ];
 
 export default function AdminSideBar() {
@@ -58,23 +61,39 @@ export default function AdminSideBar() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const logout = async()=>{
+  const logout = async () => {
     try {
       const response = await AuthAPI.Logout();
       localStorage.removeItem("userToken");
-      navigate('/');
+      navigate("/");
       toast.success(response?.data?.message);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Something went wrong!';
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong!";
       toast.error(errorMessage);
     }
-  }
+  };
 
-  const adminName = userData?.name || (userData?.firstName ? `${userData.firstName} ${userData.lastName || ''}` : "Admin");
-  const adminInitials = userData?.firstName ? userData.firstName.charAt(0).toUpperCase() : (userData?.name?.charAt(0).toUpperCase() || "A");
+  const adminName =
+    userData?.name ||
+    (userData?.firstName
+      ? `${userData.firstName} ${userData.lastName || ""}`
+      : "Admin");
+  const adminInitials = userData?.firstName
+    ? userData.firstName.charAt(0).toUpperCase()
+    : userData?.name?.charAt(0).toUpperCase() || "A";
 
   return (
-    <Box sx={{ height: "100vh", position: "sticky", top: 0, display: "flex", flexDirection: "column", flexShrink: 0 }}>
+    <Box
+      sx={{
+        height: "100vh",
+        position: "sticky",
+        top: 0,
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+      }}
+    >
       <Sidebar
         collapsed={collapsed}
         backgroundColor={SIDEBAR_BG}
@@ -82,31 +101,72 @@ export default function AdminSideBar() {
         transitionDuration={300}
       >
         {/* Toggle Button */}
-        <Box sx={{
-          display: "flex", alignItems: "center",
-          justifyContent: collapsed ? "center" : "space-between",
-          px: collapsed ? 0 : 2, py: 1.5, bgcolor: "#393280",
-        }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: collapsed ? "center" : "space-between",
+            px: collapsed ? 0 : 2,
+            py: 1.5,
+            bgcolor: "#393280",
+          }}
+        >
           {!collapsed && (
-            <Typography variant="subtitle2" fontWeight={700} color={ACTIVE_COLOR} letterSpacing={1}>
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              color={ACTIVE_COLOR}
+              letterSpacing={1}
+            >
               BOOK STORE
             </Typography>
           )}
-          <IconButton onClick={() => setCollapsed(!collapsed)} size="small"
-            sx={{ color: TEXT_COLOR, "&:hover": { color: ACTIVE_COLOR } }}>
+          <IconButton
+            onClick={() => setCollapsed(!collapsed)}
+            size="small"
+            sx={{ color: TEXT_COLOR, "&:hover": { color: ACTIVE_COLOR } }}
+          >
             <MenuRoundedIcon />
           </IconButton>
         </Box>
 
         {/* Admin Avatar */}
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 2.5, bgcolor: "#393280", mb: 1 }}>
-          <Avatar sx={{ bgcolor: ACTIVE_COLOR, width: collapsed ? 36 : 52, height: collapsed ? 36 : 52, fontSize: collapsed ? 16 : 22, fontWeight: 700, mb: collapsed ? 0 : 1, transition: "all 0.3s" }}>
-            {adminInitials}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            py: 2.5,
+            bgcolor: "#393280",
+            mb: 1,
+          }}
+        >
+          <Avatar
+            src={
+              userData?.image
+                ? `/api/images/users/${userData.image}`
+                : undefined
+            }
+            sx={{
+              bgcolor: ACTIVE_COLOR,
+              width: collapsed ? 36 : 52,
+              height: collapsed ? 36 : 52,
+              fontSize: collapsed ? 16 : 22,
+              fontWeight: 700,
+              mb: collapsed ? 0 : 1,
+              transition: "all 0.3s",
+            }}
+          >
+            {!userData?.image && adminInitials}
           </Avatar>
           {!collapsed && (
             <>
-              <Typography variant="body2" color="#fff" fontWeight={700}>{adminName}</Typography>
-              <Typography variant="caption" color={ACTIVE_COLOR}>Administrator</Typography>
+              <Typography variant="body2" color="#fff" fontWeight={700}>
+                {adminName}
+              </Typography>
+              <Typography variant="caption" color={ACTIVE_COLOR}>
+                Administrator
+              </Typography>
             </>
           )}
         </Box>

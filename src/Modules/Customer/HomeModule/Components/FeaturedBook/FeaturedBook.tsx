@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Box,CircularProgress,Container,IconButton } from "@mui/material";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -6,7 +7,9 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Book from "../../../BookModule/Components/Book/Book";
 import { useFetch } from "../../../../../Hooks/useFetch";
-import { BooksAPI } from "../../../../../Api";
+import { BooksAPI, FavAPI } from "../../../../../Api";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../../../../../Contexts/AuthContext";
 
 interface Book {
   id: number;
@@ -24,6 +27,31 @@ export default function FeaturedBook() {
     const { data: books, loading } = useFetch<Book[]>(
               () => BooksAPI.GetBooks()
     );
+
+    const [favBooks, setFavBooks] = useState<Book[]>([]);
+    const {userData}:any = useContext(AuthContext);
+
+    useEffect(() => {
+        const getMyFav = async () => {
+          const id = userData?.userId;
+    
+          if (!id) return;
+    
+          try {
+            const response = await FavAPI.GetFavourites(id);
+    
+            const extractedBooks = (response?.data || []).map(
+              (item: any) => item.book
+            );
+    
+            setFavBooks(extractedBooks);
+          } catch (error) {
+            console.log(error);
+          }
+        };
+    
+        getMyFav();
+      }, [userData?.userId]);
 
   return (
     <>
@@ -50,7 +78,7 @@ export default function FeaturedBook() {
                 >
                     {books?.slice(0,5).map((book)=>(
                         <SwiperSlide key={book.id}>
-                            <Book book={book} mode="featured"/>
+                            <Book book={book} mode="featured" favBooks={favBooks} setFavBooks={setFavBooks}/>
                         </SwiperSlide>
                     ))}
                 </Swiper>

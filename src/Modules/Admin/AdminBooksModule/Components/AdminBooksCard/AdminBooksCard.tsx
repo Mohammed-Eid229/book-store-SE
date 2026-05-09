@@ -165,7 +165,7 @@ export default function AdminBooksCard({ book, view, onDelete, onEdit }: AdminBo
           )}
 
           <Typography variant="button" color="#ED553B" sx={{ fontSize: "1.1rem" }}>
-            ${book.price.toFixed(2)}
+            {book.price.toFixed(2)} EGP
           </Typography>
 
           {/* List view actions */}

@@ -15,7 +15,6 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useForm } from 'react-hook-form';
-import { toast } from 'react-toastify';
 import { useEffect, useState, useRef } from 'react';
 
 export interface AdminFormValues {
@@ -80,12 +79,8 @@ export default function AdminForm({ open, onClose, onSubmitAction, initialData, 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const onSubmit = (data: AdminFormValues) => {
-    onSubmitAction({ ...data, img: preview || '' });
-    toast.success(`${title} successfully!`);
-    reset();
-    setPreview(null);
-    onClose();
+const onSubmit = (data: AdminFormValues) => {
+    onSubmitAction({ ...data, ...(preview && { img: preview })});
   };
 
   return (
